@@ -1,0 +1,238 @@
+Na základě popisu problému vidím, že se jedná o klasický problém hybrid offline/online aplikace s queue mechanismem. Hlavní problémy jsou:
+
+Duplicitní data - při synchronizaci se vytváří duplicity
+Nekonzistentní ID - dočasná ID se nenahrazují správně
+Nefunkční queue - synchronizace neprobíhá spolehlivě
+Nesprávná cache logika - localStorage se nekombinuje správně s Supabase
+Návrh řešení
+1. Kompletní přepsání data management logiky
+Doporučuji rozdělit logiku na několik vrstev:
+
+// AuthContext.jsx - nová struktura
+const AuthContext = createContext();
+export const AuthProvider = ({ children }) => {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [syncQueue, setSyncQueue] = useState([]);
+  const [isSyncing, setIsSyncing] = useState(false);
+  
+  // Detekce online/offline
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+  
+  // Automatická synchronizace při obnovení připojení
+  useEffect(() => {
+    if (isOnline && !isSyncing) {
+      processQueue();
+    }
+  }, [isOnline]);
+};
+2. Správná logika pro přidávání zakázek
+const addUserOrder = async (userId, orderData) => {
+  const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  const orderWithTempId = {
+    ...orderData,
+    id: tempId,
+    user_id: userId,
+    created_at: new Date().toISOString(),
+    _isTemp: true
+  };
+  
+  if (isOnline) {
+    try {
+      // Pokus o přímé uložení do Supabase
+      const { data, error } = await supabase
+        .from('orders')
+        .insert([orderWithTempId])
+        .select();
+      
+      if (error) throw error;
+      
+      // Úspěšně uloženo online - aktualizuj cache
+      const realOrder = { ...data[0], _isTemp: false };
+      updateLocalCache(userId, realOrder, 'add');
+      
+      return realOrder;
+    } catch (error) {
+      console.warn('Online uložení selhalo, přepínám na offline:', error);
+      // Přepnutí na offline režim
+      setIsOnline(false);
+    }
+  }
+  
+  // Offline režim nebo selhání online
+  addToQueue('add', orderWithTempId);
+  updateLocalCache(userId, orderWithTempId, 'add');
+  
+  return orderWithTempId;
+};
+3. Spolehlivý queue mechanismus
+const processQueue = async () => {
+  if (isSyncing || !isOnline) return;
+  
+  setIsSyncing(true);
+  const queue = getQueueFromStorage();
+  
+  for (const queueItem of queue) {
+    try {
+      await processQueueItem(queueItem);
+      removeFromQueue(queueItem.id);
+    } catch (error) {
+      console.error('Chyba při zpracování queue položky:', error);
+      // Pokud je to síťová chyba, přeruš synchronizaci
+      if (isNetworkError(error)) {
+        setIsOnline(false);
+        break;
+      }
+    }
+  }
+  
+  setIsSyncing(false);
+};
+const processQueueItem = async (queueItem) => {
+  const { action, data } = queueItem;
+  
+  switch (action) {
+    case 'add':
+      const { data: newData, error } = await supabase
+        .from('orders')
+        .insert([data])
+        .select();
+      
+      if (error) throw error;
+      
+      // Nahraď dočasné ID skutečným v cache
+      replaceTempIdInCache(data.user_id, data.id, newData[0]);
+      break;
+      
+    case 'update':
+      await supabase
+        .from('orders')
+        .update(data)
+        .eq('id', data.id);
+      break;
+      
+    case 'delete':
+      await supabase
+        .from('orders')
+        .delete()
+        .eq('id', data.id);
+      break;
+  }
+};
+4. Správná cache logika
+const getUserData = async (userId) => {
+  let cacheData = getLocalCache(userId);
+  
+  if (isOnline) {
+    try {
+      // Načti data ze Supabase
+      const { data: supabaseData, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', userId);
+      
+      if (error) throw error;
+      
+      // Sloučení dat - priorita Supabase, ale zachovej dočasné záznamy
+      const mergedData = mergeDataSets(supabaseData, cacheData);
+      
+      // Aktualizuj cache
+      updateLocalCache(userId, mergedData, 'replace');
+      
+      return mergedData;
+    } catch (error) {
+      console.warn('Nepodařilo se načíst data ze Supabase:', error);
+      setIsOnline(false);
+    }
+  }
+  
+  return cacheData;
+};
+const mergeDataSets = (supabaseData, cacheData) => {
+  const merged = [...supabaseData];
+  
+  // Přidej pouze dočasné záznamy z cache
+  cacheData.forEach(cacheItem => {
+    if (cacheItem._isTemp && !merged.find(item => item.id === cacheItem.id)) {
+      merged.push(cacheItem);
+    }
+  });
+  
+  return merged;
+};
+5. Pomocné funkce pro cache management
+const updateLocalCache = (userId, data, operation) => {
+  const cacheKey = `user_${userId}_orders`;
+  let cache = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+  
+  switch (operation) {
+    case 'add':
+      cache.push(data);
+      break;
+      
+    case 'update':
+      cache = cache.map(item => 
+        item.id === data.id ? { ...item, ...data } : item
+      );
+      break;
+      
+    case 'delete':
+      cache = cache.filter(item => item.id !== data.id);
+      break;
+      
+    case 'replace':
+      cache = Array.isArray(data) ? data : [data];
+      break;
+  }
+  
+  localStorage.setItem(cacheKey, JSON.stringify(cache));
+};
+const replaceTempIdInCache = (userId, tempId, realData) => {
+  const cacheKey = `user_${userId}_orders`;
+  let cache = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+  
+  cache = cache.map(item => 
+    item.id === tempId ? { ...realData, _isTemp: false } : item
+  );
+  
+  localStorage.setItem(cacheKey, JSON.stringify(cache));
+};
+6. Queue management
+const addToQueue = (action, data) => {
+  const queueItem = {
+    id: `queue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    action,
+    data,
+    timestamp: new Date().toISOString()
+  };
+  
+  const queue = getQueueFromStorage();
+  queue.push(queueItem);
+  localStorage.setItem('sync_queue', JSON.stringify(queue));
+};
+const getQueueFromStorage = () => {
+  return JSON.parse(localStorage.getItem('sync_queue') || '[]');
+};
+const removeFromQueue = (queueItemId) => {
+  const queue = getQueueFromStorage();
+  const filteredQueue = queue.filter(item => item.id !== queueItemId);
+  localStorage.setItem('sync_queue', JSON.stringify(filteredQueue));
+};
+Klíčové principy řešení
+Jediný zdroj pravdy: Supabase je primární, localStorage je pouze cache
+Dočasné ID: Používej prefixovaná ID pro offline záznamy
+Queue first: Vždy nejdřív přidej do queue, pak zkus synchronizovat
+Atomic operace: Každá operace musí být buď úspěšná, nebo rollbacknutá
+Síťová odolnost: Graceful degradation při výpadku připojení
+Toto řešení eliminuje duplicity, zajišťuje konzistentní stav dat a poskytuje spolehlivou synchronizaci mezi offline a online režimem.

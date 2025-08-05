@@ -1,0 +1,91 @@
+
+```css
+/* Mobile-first responsive design */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 10px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Mobilní tabulka - horizontální scroll */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .orders-table {
+    min-width: 1200px;
+    font-size: 12px;
+  }
+
+  .orders-table th,
+  .orders-table td {
+    padding: 8px 4px;
+    white-space: nowrap;
+  }
+
+  /* Kompaktní akční tlačítka */
+  .action-buttons {
+    display: flex;
+    gap: 4px;
+  }
+
+  .btn-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  /* Mobilní kalendář */
+  .calendar-wrapper {
+    font-size: 12px;
+  }
+
+  .rbc-event {
+    font-size: 10px;
+    padding: 1px 2px;
+  }
+
+  /* Mobilní modal */
+  .modal-content {
+    width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+}
+
+/* Tablet optimalizace */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+  .btn, .nav-item, .stat-card {
+    min-height: 44px; /* iOS doporučení */
+  }
+
+  .btn-icon {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+```

@@ -1,0 +1,104 @@
+# PaintPro_1-main – Detailní audit a doporučení
+
+---
+
+## 1. Hlavní chyby a slabá místa
+
+### a) Chybějící catch bloky a špatná práce s chybami
+- Některé asynchronní funkce (např. import CSV v `App.jsx`) nemají správně použitý `catch` blok.
+- **Doporučení:** Vždy obaluj asynchronní operace try/catch a správně zachytávej chyby.
+
+### b) Nekonzistence v názvech polí
+- V různých částech kódu se používá `dobaRealizace`, `delkaRealizace`, někde `doba_realizace`.
+- **Doporučení:** Sjednoť názvy napříč celým projektem (SQL, JS, UI).
+
+### c) Duplicita a nekonzistence v logice uploadu souborů
+- V různých komponentách je jiná logika pro upload do localStorage (např. v `App.jsx` a `OptimizedOrderTable.jsx`).
+- **Doporučení:** Centralizuj správu souborů do jedné utility (`FileManager`) a používej ji všude.
+
+### d) Chybějící validace vstupů
+- Ve formulářích (např. přidání zakázky) není validace povinných polí.
+- **Doporučení:** Přidej validace na povinná pole a formáty (čísla, datum, email).
+
+### e) Potenciální runtime chyby
+- Parsování datumu v kalendáři (`CalendarComponent.jsx`) může selhat, pokud není správný formát.
+- **Doporučení:** Validuj formát datumu a přidej fallback.
+
+### f) Špatné odstranění event listeneru
+- V `App.jsx` je v `useEffect` pro globální error handler špatně odstraněn listener (`removeEventListener` s jinou referencí funkce).
+- **Doporučení:** Ukládej si referenci na handler a používej ji při přidání i odebrání.
+
+### g) Importy a závislosti
+- Import `gitLockManager` vs. `GitLockManager.js` – na case-sensitive systému (např. Linux, Replit) to může způsobit chybu.
+- **Doporučení:** Vždy používej správný case podle názvu souboru.
+
+### h) Hardcoded Supabase klíče
+- V některých skriptech jsou natvrdo zadané Supabase klíče (např. `direct-update.js`).
+- **Doporučení:** Nikdy neukládej tajné klíče do repozitáře, používej Replit Secrets.
+
+### i) Typová bezpečnost
+- Projekt má nastavený TypeScript (`tsconfig.json`), ale všechny soubory jsou `.jsx`.
+- **Doporučení:** Pokud chceš typovou kontrolu, přejmenuj soubory na `.tsx` a přidej typy.
+
+---
+
+## 2. Specifická doporučení pro Replit
+
+- **Secrets:**
+  - V Replitu nastav environment proměnné (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) přes sekci "Secrets" – nikdy je nedávej do kódu.
+- **Case sensitivity:**
+  - Replit je case-sensitive – dávej pozor na velká/malá písmena v importech.
+- **Build a deployment:**
+  - `.replit` a `package.json` jsou správně nastavené pro Vite. Pokud budeš chtít nasazovat staticky, použij `vite build` a výstup v `dist/`.
+- **Node verze:**
+  - V `.replit` je nastaveno `nodejs-20`, což je v pořádku.
+- **Testy:**
+  - Využij možnost psát testy (`unitTest` sekce v `.replit`), i když žádné zatím nejsou.
+
+---
+
+## 3. Obecné best practices a doporučení
+
+- **Bezpečnost:**
+  - Hashování PINu je vlastní a slabé – použij knihovnu jako `bcryptjs`.
+- **Offline/online režim:**
+  - Queue pro offline režim je řešena přes localStorage, ale není zde robustní mechanismus pro řešení konfliktů nebo rollback při chybě synchronizace.
+- **UX/UI:**
+  - Přidej loading indikátory a lepší chybové hlášky pro uživatele.
+- **Dokumentace:**
+  - README je základní, doporučuji doplnit popis architektury, postup nasazení a vývojové workflow.
+- **Refaktoring hooks:**
+  - Některé hooky mají duplicitu s logikou v `App.jsx` – přesunout vše do custom hooks.
+- **Optimalizace výkonu:**
+  - Pro větší dataset přidej memoizaci, virtualizaci tabulek, lazy loading komponent.
+
+---
+
+## 4. TODO checklist (pro rychlou orientaci)
+
+- [ ] Sjednotit názvy polí napříč projektem (SQL, JS, UI)
+- [ ] Centralizovat správu souborů do jedné utility
+- [ ] Přidat validace do všech formulářů
+- [ ] Opravit chybějící catch bloky a špatné event listenery
+- [ ] Používat pouze environment proměnné pro Supabase klíče
+- [ ] Zvážit přechod na TypeScript pro lepší typovou bezpečnost
+- [ ] Zlepšit hashování PINu (např. bcryptjs)
+- [ ] Přidat základní testy
+- [ ] Doplň dokumentaci a popis architektury
+- [ ] Otestovat aplikaci na Replitu s ohledem na case sensitivity a build
+
+---
+
+## 5. Odkazy na konkrétní soubory a místa
+
+- `App.jsx` – chybějící catch bloky, špatné event listenery, duplicita uploadu
+- `OptimizedOrderTable.jsx` – duplicita uploadu
+- `CalendarComponent.jsx` – parsování datumu
+- `direct-update.js` – hardcoded Supabase klíče
+- `AuthContext.jsx` – hashování PINu, práce s cache
+- `package.json`, `.replit` – build, testy, node verze
+- `README.md` – dokumentace
+
+---
+
+**Tento audit slouží jako základ pro refaktoring a zvýšení kvality projektu. Pokud potřebuješ detailní návrh konkrétní opravy, napiš!** 

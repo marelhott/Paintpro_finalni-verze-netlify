@@ -1,0 +1,905 @@
+/* Modern Gradient Icons - Inspired by Premium UI Design */
+
+.modern-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  position: relative;
+  background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #06B6D4 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 8px 32px rgba(139, 92, 246, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 0 20px rgba(6, 182, 212, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.modern-icon::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-radius: inherit;
+  z-index: 1;
+}
+
+/* Dashboard/Home Icon - inspired by Lineage */
+.icon-dashboard::after {
+  content: '';
+  width: 16px;
+  height: 14px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+  position: relative;
+  z-index: 2;
+}
+
+.icon-dashboard::before {
+  content: '';
+  position: absolute;
+  top: 65%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 8px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  z-index: 3;
+}
+
+/* Orders/Document Icon - inspired by Catalog */
+.icon-orders::after {
+  content: '';
+  width: 12px;
+  height: 16px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 2px;
+  position: relative;
+  z-index: 2;
+}
+
+.icon-orders::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    0 3px 0 rgba(255, 255, 255, 0.9),
+    0 6px 0 rgba(255, 255, 255, 0.9);
+  z-index: 3;
+}
+
+/* Reports/Chart Icon - inspired by Observe */
+.icon-reports::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  position: relative;
+  z-index: 2;
+}
+
+.icon-reports::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  z-index: 3;
+}
+
+/* Calendar Icon */
+.icon-calendar::after {
+  content: '';
+  width: 14px;
+  height: 12px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 2px;
+  position: relative;
+  z-index: 2;
+}
+
+.icon-calendar::before {
+  content: '';
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    0 3px 0 rgba(255, 255, 255, 0.9),
+    0 6px 0 rgba(255, 255, 255, 0.9);
+  z-index: 3;
+}
+
+/* Settings/Gear Icon - inspired by Compliance */
+.icon-settings::after {
+  content: '';
+  width: 12px;
+  height: 14px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 3px;
+  position: relative;
+  z-index: 2;
+}
+
+.icon-settings::before {
+  content: '';
+  position: absolute;
+  top: 40%;
+  right: 30%;
+  transform: translate(50%, -50%);
+  width: 0;
+  height: 0;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 5px solid rgba(255, 255, 255, 0.9);
+  z-index: 3;
+}
+
+.icon-settings::before {
+  content: "⚙️";
+}
+
+/* Map Icon - CSS Based Design */
+.icon-map::after {
+  content: '';
+  width: 14px;
+  height: 12px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 2px;
+  position: relative;
+  z-index: 2;
+}
+
+.icon-map::before {
+  content: '';
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  z-index: 3;
+}
+
+/* Money/Dollar Icon */
+.icon-revenue,
+.icon-money {
+  background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #06B6D4 100%);
+}
+
+.icon-revenue::after,
+.icon-money::after {
+  content: '';
+  width: 16px;
+  height: 16px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  position: relative;
+  z-index: 2;
+}
+
+.icon-revenue::before,
+.icon-money::before {
+  content: '$';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 700;
+  font-size: 12px;
+  z-index: 3;
+}
+
+/* Chart/Analytics Icon */
+.icon-chart,
+.icon-profit {
+  background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #06B6D4 100%);
+}
+
+.icon-chart::after,
+.icon-profit::after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 10px solid rgba(255, 255, 255, 0.9);
+  position: relative;
+  z-index: 2;
+}
+
+.icon-chart::before,
+.icon-profit::before {
+  content: '';
+  position: absolute;
+  top: 70%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  z-index: 3;
+}
+
+/* Count Icon */
+.icon-count {
+  background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #06B6D4 100%);
+}
+
+.icon-count::after {
+  content: '';
+  width: 10px;
+  height: 14px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 2px;
+  position: relative;
+  z-index: 2;
+  box-shadow: 2px -2px 0 0 rgba(255, 255, 255, 0.6);
+}
+
+.icon-count::before {
+  content: '';
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 5px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    0 2px 0 rgba(255, 255, 255, 0.9),
+    0 4px 0 rgba(255, 255, 255, 0.9);
+  z-index: 3;
+}
+
+/* Target/Average Icon */
+.icon-average,
+.icon-target {
+  background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #06B6D4 100%);
+}
+
+.icon-average::after,
+.icon-target::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  position: relative;
+  z-index: 2;
+}
+
+.icon-average::before,
+.icon-target::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  z-index: 3;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
+}
+
+/* Export Icon - inspired by ETL */
+.icon-export {
+  background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #06B6D4 100%);
+}
+
+.icon-export::after {
+  content: '';
+  width: 12px;
+  height: 10px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 2px 2px 0 0;
+  position: relative;
+  z-index: 2;
+}
+
+.icon-export::before {
+  content: '';
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-bottom: 5px solid rgba(255, 255, 255, 0.9);
+  z-index: 3;
+}
+
+/* Add/Plus Icon */
+.icon-add {
+  background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #06B6D4 100%);
+}
+
+.icon-add::after {
+  content: '';
+  width: 2px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 1px;
+  position: relative;
+  z-index: 2;
+}
+
+.icon-add::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 1px;
+  z-index: 3;
+}
+
+/* Edit/Pencil Icon */
+.icon-edit {
+  background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #06B6D4 100%);
+}
+
+.icon-edit::after {
+  content: '';
+  width: 10px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  position: relative;
+  transform: rotate(45deg) translate(2px, -2px);
+  z-index: 2;
+}
+
+.icon-edit::before {
+  content: '';
+  position: absolute;
+  top: 35%;
+  left: 65%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  z-index: 3;
+}
+
+/* Delete/Trash Icon */
+.icon-delete {
+  background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #06B6D4 100%);
+}
+
+.icon-delete::after {
+  content: '';
+  width: 10px;
+  height: 12px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-top: none;
+  border-radius: 0 0 2px 2px;
+  position: relative;
+  z-index: 2;
+}
+
+.icon-delete::before {
+  content: '';
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 1px;
+  z-index: 3;
+}
+
+/* Stats Icons */
+.icon-revenue {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.icon-revenue::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.6));
+  border-radius: 50%;
+  position: relative;
+  box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.icon-revenue::before {
+  content: '$';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(102, 126, 234, 0.8);
+  font-weight: 700;
+  font-size: 10px;
+  z-index: 2;
+}
+
+.icon-money {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.icon-money::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.6));
+  border-radius: 50%;
+  position: relative;
+  box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.icon-money::before {
+  content: '$';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(102, 126, 234, 0.8);
+  font-weight: 700;
+  font-size: 10px;
+  z-index: 2;
+}
+
+.icon-chart {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  box-shadow: 0 8px 32px rgba(168, 237, 234, 0.4),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.icon-chart::after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 10px solid rgba(255, 255, 255, 0.9);
+  position: relative;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.icon-chart::before {
+  content: '';
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 1;
+}
+
+.icon-target {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+  box-shadow: 0 8px 32px rgba(255, 154, 158, 0.4),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.icon-target::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 30%, rgba(255, 255, 255, 0.8) 30%);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  position: relative;
+}
+
+.icon-target::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 154, 158, 0.8);
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.icon-profit {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  box-shadow: 0 8px 32px rgba(168, 237, 234, 0.4),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.icon-profit::after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 10px solid rgba(255, 255, 255, 0.9);
+  position: relative;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.icon-profit::before {
+  content: '';
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 1;
+}
+
+.icon-count {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  box-shadow: 0 8px 32px rgba(252, 182, 159, 0.4),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.icon-count::after {
+  content: '';
+  width: 12px;
+  height: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 100%);
+  border-radius: 2px 2px 0 0;
+  position: relative;
+  box-shadow: 
+    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.icon-count::before {
+  content: '';
+  position: absolute;
+  top: 65%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow: 
+    0 2px 0 rgba(0, 0, 0, 0.3),
+    0 4px 0 rgba(0, 0, 0, 0.3);
+  z-index: 2;
+}
+
+.icon-average {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+  box-shadow: 0 8px 32px rgba(255, 154, 158, 0.4),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.icon-average::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 30%, rgba(255, 255, 255, 0.8) 30%);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  position: relative;
+}
+
+.icon-average::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 154, 158, 0.8);
+  border-radius: 50%;
+  z-index: 2;
+}
+
+/* Action Icons */
+.icon-export {
+  background: transparent;
+}
+
+.icon-export::after {
+  content: '';
+  width: 14px;
+  height: 12px;
+  background: transparent;
+  border: 2px solid currentColor;
+  border-radius: 2px 2px 0 0;
+  position: relative;
+  opacity: 0.8;
+}
+
+.icon-export::before {
+  content: '';
+  position: absolute;
+  top: 25%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 6px solid currentColor;
+  opacity: 0.8;
+  z-index: 2;
+}
+
+.icon-add {
+  background: transparent;
+}
+
+.icon-add::after {
+  content: '';
+  width: 3px;
+  height: 16px;
+  background: currentColor;
+  position: relative;
+  opacity: 0.8;
+}
+
+.icon-add::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 3px;
+  background: currentColor;
+  opacity: 0.8;
+  z-index: 2;
+}
+
+.icon-edit {
+  background: transparent;
+}
+
+.icon-edit::after {
+  content: '';
+  width: 12px;
+  height: 3px;
+  background: currentColor;
+  position: relative;
+  transform: rotate(45deg) translate(2px, -2px);
+  opacity: 0.8;
+}
+
+.icon-edit::before {
+  content: '';
+  position: absolute;
+  top: 35%;
+  left: 65%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 5px;
+  height: 5px;
+  background: currentColor;
+  border: 1px solid currentColor;
+  opacity: 0.8;
+  z-index: 2;
+}
+
+.icon-delete {
+  background: transparent;
+}
+
+.icon-delete::after {
+  content: '';
+  width: 12px;
+  height: 14px;
+  background: transparent;
+  border: 2px solid currentColor;
+  border-top: none;
+  border-radius: 0 0 3px 3px;
+  position: relative;
+  opacity: 0.8;
+}
+
+.icon-delete::before {
+  content: '';
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 3px;
+  background: currentColor;
+  opacity: 0.8;
+  z-index: 2;
+}
+
+/* Hover Effects */
+.modern-icon:hover {
+  transform: translateY(-2px) scale(1.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(135deg, #A855F7 0%, #3B82F6 50%, #06B6D4 100%);
+  box-shadow: 
+    0 12px 40px rgba(139, 92, 246, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 0 30px rgba(6, 182, 212, 0.3);
+}
+
+.modern-icon:hover::before {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%);
+}
+
+/* Sizes */
+.modern-icon.size-small {
+  width: 20px;
+  height: 20px;
+  border-radius: 8px;
+}
+
+.modern-icon.size-medium {
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+}
+
+.modern-icon.size-large {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+}
+
+/* Navigation specific styling */
+.nav-item .modern-icon {
+  width: 32px;
+  height: 32px;
+  margin-right: 12px;
+  border-radius: 14px;
+}
+
+/* Logo specific styling */
+.logo .modern-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 16px;
+}
+
+/* Button specific styling */
+.btn .modern-icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  border-radius: 8px;
+}
+
+.btn-icon .modern-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 8px;
+}
+
+/* Action button card styling */
+.action-button-card .modern-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+}
+
+/* Stats card styling */
+.stat-card .modern-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .modern-icon.size-large {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+  }
+
+  .modern-icon.size-medium {
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+  }
+
+  .nav-item .modern-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 12px;
+  }
+
+  .action-button-card .modern-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+  }
+}
+
+/* Activity item styling */
+.activity-item .modern-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+/* Calculator Icon */
+.icon-calculator {
+  background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #06B6D4 100%);
+}
+
+.icon-calculator::after {
+  content: '';
+  width: 12px;
+  height: 14px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 2px;
+  position: relative;
+  z-index: 2;
+}
+
+.icon-calculator::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    0 -3px 0 rgba(255, 255, 255, 0.9),
+    0 3px 0 rgba(255, 255, 255, 0.9),
+    -2px -3px 0 rgba(255, 255, 255, 0.9),
+    2px -3px 0 rgba(255, 255, 255, 0.9),
+    -2px 0 0 rgba(255, 255, 255, 0.9),
+    2px 0 0 rgba(255, 255, 255, 0.9),
+    -2px 3px 0 rgba(255, 255, 255, 0.9),
+    2px 3px 0 rgba(255, 255, 255, 0.9);
+  z-index: 3;
+}
