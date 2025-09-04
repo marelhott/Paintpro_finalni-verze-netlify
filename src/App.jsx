@@ -46,7 +46,7 @@ import FileManager from './utils/FileManager';
 
 // Zpětná kompatibilita
 const validateFile = FileManager.validateFile;
-const uploadFileToSupabase = FileManager.uploadFile;
+const uploadFile = FileManager.uploadFile;
 const downloadFile = FileManager.downloadFile;
 
 // Import filtrovacích funkcí
@@ -3561,7 +3561,7 @@ const PaintPro = () => {
           }
 
           // Upload do localStorage
-          const result = await uploadFileToSupabase(file, zakazka.id.toString());
+          const result = await uploadFile(file, zakazka.id.toString());
           if (!result.success) {
             throw new Error(result.error);
           }

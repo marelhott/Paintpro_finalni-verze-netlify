@@ -22,7 +22,6 @@
     "vite": "^5.0.0"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.50.5",
     "chart.js": "^4.5.0",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.10.3",

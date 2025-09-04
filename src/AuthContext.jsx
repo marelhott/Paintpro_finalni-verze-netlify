@@ -1,27 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import DiskStorageManager from './utils/DiskStorageManager';
 
-// Supabase konfigurace - environment variables s bezpečnymi fallback hodnotami
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://lseqrqmtjymukewnejdd.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzZXFycW10anltdWtld25lamRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyNjQ2MjcsImV4cCI6MjA2Nzg0MDYyN30.SgWjc-GETZ_D0tJNtErxXhUaH6z_MgRJtxc94RsUXPw';
-
-console.log('🔧 Supabase konfigurace:');
-console.log('- URL:', supabaseUrl ? '✅ Nastaveno' : '❌ CHYBÍ');
-console.log('- Key:', supabaseKey ? '✅ Nastaveno' : '❌ CHYBÍ');
-console.log('- URL hodnota:', supabaseUrl);
-
-// KONTROLA: Ověř, že konfigurace je kompletní
-if (!supabaseUrl || !supabaseKey) {
-  console.error('❌ KRITICKÁ CHYBA: Chybí Supabase konfigurace!');
-  console.error('📋 KROKY K OPRAVĚ:');
-  console.error('1. Otevřete Replit Secrets (Tools > Secrets)');
-  console.error('2. Přidejte: VITE_SUPABASE_URL = https://lseqrqmtjymukewnejdd.supabase.co');
-  console.error('3. Přidejte: VITE_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzZXFycW10anltdWtld25lamRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyNjQ2MjcsImV4cCI6MjA2Nzg0MDYyN30.SgWjc-GETZ_D0tJNtErxXhUaH6z_MgRJtxc94RsUXPw');
-  console.error('4. Restartujte aplikaci');
-}
-
-// Vytvoř Supabase klienta - vždy by měl existovat
-const supabase = createClient(supabaseUrl, supabaseKey);
+console.log('🔧 Aplikace běží v offline režimu s lokálním úložištěm');
 
 // Vytvoření AuthContext
 const AuthContext = createContext();
@@ -65,108 +45,36 @@ export const AuthProvider = ({ children }) => {
 
   // Zpracování offline queue
   const processQueue = async () => {
-    if (!isOnline) {
-      console.log('📱 Offline - queue se nezpracovává');
-      return;
-    }
-
     const queue = JSON.parse(localStorage.getItem('sync_queue') || '[]');
     if (queue.length === 0) {
       console.log('📋 Queue je prázdná');
       return;
     }
 
-    console.log('🔄 Zpracovávám offline queue:', queue.length, 'operací');
-    const processedOperations = [];
-    const failedOperations = [];
-
-    for (const operation of queue) {
-      try {
-        console.log('🔄 Zpracovávám:', operation.type, operation.tempId || operation.orderId || 'N/A');
-
-        let result = null;
-        switch (operation.type) {
-          case 'create_user':
-            result = await supabase.from('users').insert([operation.data]).select().single();
-            break;
-          case 'create_order':
-            result = await supabase.from('orders').insert([operation.data]).select().single();
-
-            // Pokud má tempId, aktualizuj cache s reálným ID
-            if (operation.tempId && result.data) {
-              const cacheKey = `paintpro_orders_cache_${operation.data.user_id}`;
-              const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]');
-              const updatedCache = cached.map(order => 
-                order.id === operation.tempId ? result.data : order
-              );
-              localStorage.setItem(cacheKey, JSON.stringify(updatedCache));
-              console.log('✅ Cache aktualizována s reálným ID:', result.data.id);
-            }
-            break;
-          case 'update_order':
-            result = await supabase.from('orders').update(operation.data).eq('id', operation.orderId).select();
-            break;
-          case 'delete_order':
-            result = await supabase.from('orders').delete().eq('id', operation.orderId);
-            break;
-          case 'update_user_pin':
-            result = await supabase.from('users').update(operation.data).eq('id', operation.userId).select();
-            break;
-        }
-
-        if (result?.error) {
-          throw result.error;
-        }
-
-        console.log('✅ Synchronizována operace:', operation.type);
-        processedOperations.push(operation);
-      } catch (error) {
-        console.error('❌ Chyba při synchronizaci:', operation.type, error);
-        failedOperations.push(operation);
-        continue;
-      }
-    }
-
-    // Zachovej pouze neúspěšné operace v queue
-    localStorage.setItem('sync_queue', JSON.stringify(failedOperations));
-    console.log(`✅ Queue zpracována: ${processedOperations.length} úspěšných, ${failedOperations.length} neúspěšných`);
-
-    // Znovu načti data pokud byly úspěšné operace
-    if (processedOperations.length > 0 && currentUser?.id) {
-      console.log('🔄 Obnovuji data po synchronizaci...');
-      await getUserData(currentUser.id);
-    }
+    console.log('🔄 Zpracovávám offline queue (lokálně):', queue.length, 'operací');
+    
+    // V offline režimu pouze vyčistíme queue, protože vše je už uloženo lokálně
+    localStorage.setItem('sync_queue', JSON.stringify([]));
+    console.log('✅ Queue vyčištěna - všechny operace jsou uloženy lokálně');
   };
 
-  // Načtení uživatelů - přímo ze Supabase
+  // Načtení uživatelů - pouze z localStorage
   const loadUsers = async () => {
     try {
-      console.log('🔍 Načítám uživatele ze Supabase...');
-      const { data, error } = await supabase.from('users').select('*');
-
-      if (error) {
-        console.error('❌ Supabase chyba:', error);
-        throw error;
+      console.log('🔍 Načítám uživatele z localStorage...');
+      
+      const cached = localStorage.getItem('paintpro_users_cache');
+      if (cached) {
+        const users = JSON.parse(cached);
+        console.log('✅ Načteno z cache:', users.length, 'uživatelů');
+        return users;
       }
-
-      if (data && data.length > 0) {
-        console.log('✅ Načteno ze Supabase:', data.length, 'uživatelů');
-        console.log('👥 Uživatelé:', data.map(u => u.name));
-        // Aktualizuj také cache
-        localStorage.setItem('paintpro_users_cache', JSON.stringify(data));
-        return data;
-      }
-
-      console.log('⚠️ Žádní uživatelé v Supabase, vytvářím admin...');
+      
+      console.log('⚠️ Žádná cache, vytvářím výchozího admina...');
       return createDefaultAdmin();
     } catch (error) {
-      console.error('❌ Chyba při načítání ze Supabase:', error);
-      // Fallback na cache pouze v případě chyby
-      const cached = JSON.parse(localStorage.getItem('paintpro_users_cache') || '[]');
-      if (cached.length > 0) {
-        console.log('📦 Použita cache:', cached.length, 'uživatelů');
-        return cached;
-      }
+      console.error('❌ Chyba při načítání z localStorage:', error);
+      console.log('⚠️ Vytvářím výchozího admina...');
       return createDefaultAdmin();
     }
   };
@@ -185,14 +93,7 @@ export const AuthProvider = ({ children }) => {
 
     localStorage.setItem('paintpro_users_cache', JSON.stringify([admin]));
 
-    // Přidej do queue pro synchronizaci
-    if (isOnline) {
-      addToQueue({
-        type: 'create_user',
-        data: admin
-      });
-    }
-
+    console.log('✅ Výchozí admin vytvořen:', admin.name);
     return [admin];
   };
 
@@ -245,104 +146,24 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('paintpro_current_user');
   };
 
-  // Načtení dat uživatele (Supabase first, localStorage cache) - OPTIMALIZOVANÉ
+  // Načtení dat uživatele - pouze z localStorage
   const getUserData = async (userId) => {
+    const cacheKey = `paintpro_orders_cache_${userId}`;
+    
     try {
-      const cacheKey = `paintpro_orders_cache_${userId}`;
-      console.log('🔍 getUserData START - userId:', userId, 'isOnline:', isOnline);
-
-      if (isOnline) {
-        console.log('🌐 Online - načítám ze Supabase...');
-        const { data, error } = await supabase
-          .from('orders')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
-
-        if (!error && data) {
-          console.log('✅ Supabase data načtena pro', userId, ':', data.length, 'zakázek');
-
-          // OPRAVENÁ VALIDACE: Méně přísná validace - zobraz i zakázky bez klienta
-          const validData = data.filter(order => {
-            const hasValidCastka = order.castka && order.castka > 0;
-            const hasValidUserId = order.user_id === userId;
-            
-            // Klient může být prázdný (např. Adam zakázky) - to je v pořádku
-            const hasKlient = order.klient !== null && order.klient !== undefined;
-
-            const isValid = hasValidCastka && hasValidUserId && hasKlient;
-
-            if (!isValid) {
-              console.warn('⚠️ Nevalidní zakázka ODSTRANĚNA:', {
-                id: order.id,
-                klient: order.klient,
-                castka: order.castka,
-                user_id: order.user_id,
-                reasons: {
-                  invalidCastka: !hasValidCastka, 
-                  invalidUserId: !hasValidUserId,
-                  missingKlientField: !hasKlient
-                }
-              });
-            }
-
-            return isValid;
-          });
-
-          console.log('✅ Validních zakázek po filtraci:', validData.length);
-
-          // DEDUPLIKACE - odstraň duplicity podle ID
-          const uniqueData = [];
-          const seenIds = new Set();
-
-          validData.forEach(order => {
-            if (!seenIds.has(order.id)) {
-              seenIds.add(order.id);
-              uniqueData.push(order);
-            } else {
-              console.warn('🔄 Duplicitní ID odstraněno:', order.id);
-            }
-          });
-
-          console.log('✅ Unikátních zakázek po deduplikaci:', uniqueData.length);
-
-          // Ulož pouze čistá, validní data
-          localStorage.setItem(cacheKey, JSON.stringify(uniqueData));
-          return uniqueData;
-        } else if (error) {
-          console.error('❌ Supabase chyba:', error);
-          throw error;
-        }
+      console.log('📦 Načítám data z localStorage pro uživatele:', userId);
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const data = JSON.parse(cached);
+        console.log('✅ Data načtena pro', userId, ':', data.length, 'zakázek');
+        return data;
       }
 
-      // Fallback na cache - ale i cache validuj
-      console.log('📦 Offline/Fallback - načítám z cache...');
-      const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]');
-
-      // Validuj i cache data - umožni prázdné klienty
-      const validCached = cached.filter(order => 
-        order.klient !== null && 
-        order.klient !== undefined && 
-        order.castka > 0 &&
-        order.user_id === userId
-      );
-
-      if (validCached.length !== cached.length) {
-        console.warn('📦 Nevalidní data odstraněna z cache:', cached.length - validCached.length, 'záznamů');
-        localStorage.setItem(cacheKey, JSON.stringify(validCached));
-      }
-
-      console.log('📦 Validní cache data:', validCached.length, 'zakázek');
-      return validCached;
+      console.log('📝 Žádná data pro uživatele', userId);
+      return [];
     } catch (error) {
-      console.error('❌ Chyba při getUserData:', error);
-      // Poslední fallback - ale i ten validuj
-      const fallbackData = JSON.parse(localStorage.getItem(`paintpro_orders_cache_${userId}`) || '[]');
-      const validFallback = fallbackData.filter(order => 
-        order.klient !== null && order.klient !== undefined && order.castka > 0 && order.user_id === userId
-      );
-      console.log('🆘 Validní fallback data:', validFallback.length, 'zakázek');
-      return validFallback;
+      console.error('❌ Chyba při načítání z localStorage:', error);
+      return [];
     }
   };
 
@@ -364,24 +185,7 @@ export const AuthProvider = ({ children }) => {
       cached.push(newUser);
       localStorage.setItem('paintpro_users_cache', JSON.stringify(cached));
 
-      if (isOnline) {
-        try {
-          const { error } = await supabase.from('users').insert([newUser]);
-          if (error) throw error;
-          console.log('✅ Uživatel vytvořen v Supabase');
-        } catch (supabaseError) {
-          console.warn('⚠️ Supabase nedostupný, přidáno do queue');
-          addToQueue({
-            type: 'create_user',
-            data: newUser
-          });
-        }
-      } else {
-        addToQueue({
-          type: 'create_user',
-          data: newUser
-        });
-      }
+      console.log('✅ Uživatel vytvořen lokálně');
 
       return { success: true, user: newUser };
     } catch (error) {
@@ -418,84 +222,35 @@ export const AuthProvider = ({ children }) => {
 
       console.log('📋 Připravený objekt zakázky:', newOrder);
 
-      // NEJDŘÍV ulož do Supabase (priorita)
-      if (isOnline) {
-        try {
-          console.log('💾 Ukládám do Supabase...');
-          const { data, error } = await supabase
-            .from('orders')
-            .insert([newOrder])
-            .select()
-            .single();
+      // Ukládám pouze lokálně
+      console.log('💾 Ukládám zakázku lokálně...');
+      
+      // Dočasné ID pro cache
+      const tempId = 'local_' + Date.now() + '_' + Math.random();
+      const orderWithTempId = { ...newOrder, id: tempId };
 
-          if (error) {
-            console.error('❌ Supabase error:', error);
-            throw error;
-          }
+      // Aktualizuj cache
+      const cacheKey = `paintpro_orders_cache_${userId}`;
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+      cached.unshift(orderWithTempId);
+      localStorage.setItem(cacheKey, JSON.stringify(cached));
 
-          console.log('✅ Zakázka úspěšně uložena do Supabase:', data);
-
-          // Aktualizuj cache s reálnými daty ze Supabase
-          const cacheKey = `paintpro_orders_cache_${userId}`;
-          const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]');
-          cached.unshift(data);
-          localStorage.setItem(cacheKey, JSON.stringify(cached));
-
-          console.log('✅ Cache aktualizována, celkem zakázek:', cached.length);
-          return cached;
-
-        } catch (supabaseError) {
-          console.error('❌ DETAILNÍ SUPABASE CHYBA:');
-          console.error('- Error object:', supabaseError);
-          console.error('- Error message:', supabaseError?.message);
-          console.error('- Error details:', supabaseError?.details);
-          console.error('- Error hint:', supabaseError?.hint);
-          console.error('- Error code:', supabaseError?.code);
-          console.error('- Odesílaná data:', newOrder);
-          console.error('❌ Supabase selhala, ukládám do queue:', supabaseError);
-
-          // Fallback - dočasné ID pro cache
-          const tempId = 'temp_' + Date.now() + '_' + Math.random();
-          const orderWithTempId = { ...newOrder, id: tempId };
-
-          // Okamžitě aktualizuj cache
-          const cacheKey = `paintpro_orders_cache_${userId}`;
-          const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]');
-          cached.unshift(orderWithTempId);
-          localStorage.setItem(cacheKey, JSON.stringify(cached));
-
-          // Přidej do queue pro pozdější synchronizaci
-          addToQueue({
-            type: 'create_order',
-            data: newOrder,
-            tempId: tempId
+      console.log('✅ Zakázka uložena lokálně s ID:', tempId);
+      
+      // Automatické ukládání na disk
+      if (currentUser) {
+        DiskStorageManager.autoSaveOrders(cached, currentUser)
+          .then(success => {
+            if (success) {
+              console.log('💾 Automatické uložení na disk dokončeno');
+            }
+          })
+          .catch(error => {
+            console.warn('⚠️ Automatické uložení na disk selhalo:', error.message);
           });
-
-          console.log('⚠️ Zakázka uložena dočasně, bude synchronizována později');
-          return cached;
-        }
-      } else {
-        console.log('📱 Offline režim - ukládám do cache a queue');
-
-        // Offline - dočasné ID
-        const tempId = 'offline_' + Date.now() + '_' + Math.random();
-        const orderWithTempId = { ...newOrder, id: tempId };
-
-        // Aktualizuj cache
-        const cacheKey = `paintpro_orders_cache_${userId}`;
-        const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]');
-        cached.unshift(orderWithTempId);
-        localStorage.setItem(cacheKey, JSON.stringify(cached));
-
-        // Přidej do queue
-        addToQueue({
-          type: 'create_order',
-          data: newOrder,
-          tempId: tempId
-        });
-
-        return cached;
       }
+      
+      return cached;
     } catch (error) {
       console.error('❌ Kritická chyba při addUserOrder:', error);
       throw error;
@@ -520,30 +275,19 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem(cacheKey, JSON.stringify(cached));
       }
 
-      if (isOnline) {
-        try {
-          const { error } = await supabase
-            .from('orders')
-            .update(updatedOrderData)
-            .eq('id', orderId)
-            .eq('user_id', userId);
-
-          if (error) throw error;
-          console.log('✅ Zakázka upravena v Supabase');
-        } catch (supabaseError) {
-          console.warn('⚠️ Supabase nedostupný, přidáno do queue');
-          addToQueue({
-            type: 'update_order',
-            orderId: orderId,
-            data: updatedOrderData
+      console.log('✅ Zakázka upravena lokálně');
+      
+      // Automatické ukládání na disk
+      if (currentUser) {
+        DiskStorageManager.autoSaveOrders(cached, currentUser)
+          .then(success => {
+            if (success) {
+              console.log('💾 Automatické uložení na disk dokončeno (editace)');
+            }
+          })
+          .catch(error => {
+            console.warn('⚠️ Automatické uložení na disk selhalo:', error.message);
           });
-        }
-      } else {
-        addToQueue({
-          type: 'update_order',
-          orderId: orderId,
-          data: updatedOrderData
-        });
       }
 
       return cached;
@@ -562,28 +306,19 @@ export const AuthProvider = ({ children }) => {
       const updatedOrders = cached.filter(order => order.id != orderId);
       localStorage.setItem(cacheKey, JSON.stringify(updatedOrders));
 
-      if (isOnline) {
-        try {
-          const { error } = await supabase
-            .from('orders')
-            .delete()
-            .eq('id', orderId)
-            .eq('user_id', userId);
-
-          if (error) throw error;
-          console.log('✅ Zakázka smazána v Supabase');
-        } catch (supabaseError) {
-          console.warn('⚠️ Supabase nedostupný, přidáno do queue');
-          addToQueue({
-            type: 'delete_order',
-            orderId: orderId
+      console.log('✅ Zakázka smazána lokálně');
+      
+      // Automatické ukládání na disk
+      if (currentUser) {
+        DiskStorageManager.autoSaveOrders(updatedOrders, currentUser)
+          .then(success => {
+            if (success) {
+              console.log('💾 Automatické uložení na disk dokončeno (smazání)');
+            }
+          })
+          .catch(error => {
+            console.warn('⚠️ Automatické uložení na disk selhalo:', error.message);
           });
-        }
-      } else {
-        addToQueue({
-          type: 'delete_order',
-          orderId: orderId
-        });
       }
 
       return updatedOrders;
@@ -637,31 +372,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('paintpro_users_cache', JSON.stringify(updatedUsers));
       console.log('✅ Cache uživatelů aktualizována');
 
-      // Synchronizuj s Supabase (ale nevadí, když selže)
-      try {
-        if (isOnline) {
-          console.log('🔧 Synchronizuji s Supabase...');
-          const { error } = await supabase
-            .from('users')
-            .update({ pin_hash: hashedNewPin })
-            .eq('id', currentUser.id);
-
-          if (error) {
-            console.error('❌ Supabase chyba:', error);
-            throw error;
-          }
-          console.log('✅ PIN úspěšně synchronizován s Supabase');
-        } else {
-          throw new Error('Offline režim');
-        }
-      } catch (error) {
-        console.warn('⚠️ PIN změněn lokálně, přidáno do queue pro pozdější synchronizaci');
-        addToQueue({
-          type: 'update_user_pin',
-          userId: currentUser.id,
-          data: { pin_hash: hashedNewPin }
-        });
-      }
+      console.log('✅ PIN změněn lokálně');
 
       console.log('🔧 ZMĚNA PIN - ÚSPĚCH, nový hash:', hashedNewPin);
       return { success: true };
@@ -748,19 +459,7 @@ export const AuthProvider = ({ children }) => {
       console.log('🔧 Opravuji PIN administrátora na 135715...');
       const newPinHash = hashPin('135715');
 
-      // Aktualizuj v Supabase
-      if (isOnline) {
-        const { error } = await supabase
-          .from('users')
-          .update({ pin_hash: newPinHash })
-          .eq('id', 'admin_1');
-
-        if (error) {
-          console.error('❌ Chyba při aktualizaci PIN v Supabase:', error);
-        } else {
-          console.log('✅ PIN administrátora úspěšně aktualizován v Supabase');
-        }
-      }
+      console.log('✅ PIN administrátora aktualizován lokálně');
 
       // Aktualizuj v cache
       const users = JSON.parse(localStorage.getItem('paintpro_users_cache') || '[]');
@@ -792,8 +491,8 @@ export const AuthProvider = ({ children }) => {
       try {
         console.log('🚀 Inicializace AuthContext...');
 
-        // Načtení uživatelů ze Supabase
-        console.log('🔧 Načítám uživatele ze Supabase...');
+        // Načtení uživatelů z localStorage
+        console.log('🔧 Načítám uživatele z localStorage...');
         await loadUsers();
 
         // Oprav PIN administrátora

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
+import { DiskStorageSettings } from './index';
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
   const { currentUser, logout } = useAuth();
   const [showProfileSettings, setShowProfileSettings] = useState(false);
+  const [showDiskSettings, setShowDiskSettings] = useState(false);
 
   return (
     <div className="sidebar">
@@ -63,20 +65,40 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
       </nav>
 
       {currentUser && (
-        <div className="user-info-bottom">
-          <div 
-            className="user-avatar"
-            style={{ backgroundColor: currentUser.color }}
-          >
-            {currentUser.avatar}
+        <div className="sidebar-bottom">
+          <div className="settings-section">
+            <div 
+              className="settings-item"
+              onClick={() => setShowDiskSettings(true)}
+              title="Nastavení ukládání na disk"
+            >
+              <div className="modern-icon icon-settings"></div>
+              <span>Ukládání na disk</span>
+            </div>
           </div>
-          <div className="user-details">
-            <div className="user-name">{currentUser.name}</div>
-            <button className="logout-btn" onClick={logout}>
-              Odhlásit se
-            </button>
+          
+          <div className="user-info-bottom">
+            <div 
+              className="user-avatar"
+              style={{ backgroundColor: currentUser.color }}
+            >
+              {currentUser.avatar}
+            </div>
+            <div className="user-details">
+              <div className="user-name">{currentUser.name}</div>
+              <button className="logout-btn" onClick={logout}>
+                Odhlásit se
+              </button>
+            </div>
           </div>
         </div>
+      )}
+      
+      {showDiskSettings && (
+        <DiskStorageSettings 
+          isOpen={showDiskSettings}
+          onClose={() => setShowDiskSettings(false)}
+        />
       )}
     </div>
   );

@@ -8,3 +8,4 @@ export { default as EditZakazkaModal } from './EditZakazkaModal';
 // Dashboard je definován přímo v App.jsx
 export { default as ReportsSection } from './ReportsSection';
 export { default as MapSection } from './MapSection';
+export { default as DiskStorageSettings } from './DiskStorageSettings';

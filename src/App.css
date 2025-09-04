@@ -241,6 +241,144 @@ body::after {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Sidebar bottom section */
+.sidebar-bottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Settings section */
+.settings-section {
+  padding: 8px 0;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.settings-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.settings-item .modern-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+}
+
+.settings-item:hover .modern-icon {
+  opacity: 1;
+}
+
+/* Disk Storage Settings Modal */
+.disk-storage-settings {
+  padding: 20px 0;
+}
+
+.setting-section {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.2);
+}
+
+.setting-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.setting-section h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.setting-section p {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.folder-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.selected-folder {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 8px;
+}
+
+.folder-icon {
+  font-size: 18px;
+}
+
+.folder-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.no-folder {
+  padding: 12px;
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.warning-message {
+  padding: 12px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 8px;
+  font-size: 14px;
+  color: #92400e;
+  margin-bottom: 16px;
+}
+
+.info-list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.info-list li {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
 .user-info-bottom {
   display: flex;
   align-items: center;
@@ -249,7 +387,6 @@ body::after {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  margin-top: auto;
 }
 
 .user-avatar {
@@ -773,10 +910,7 @@ body::after {
 }
 
 .stat-icon.icon-orders {
-  background: rgba(139, 92
-This file contains the complete code with the table rebuilt and updated.
-```python
-, 246, 0.15);
+  background: rgba(139, 92, 246, 0.15);
   color: var(--accent-purple);
 }
 

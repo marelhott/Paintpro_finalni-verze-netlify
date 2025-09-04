@@ -140,7 +140,7 @@ export const useZakazkyData = () => {
       // Aktualizuj lokální state okamžitě
       setZakazkyData(updatedZakazky);
 
-      // Aktualizuj v Supabase na pozadí
+      // Aktualizuj v localStorage
       const zakazkaToUpdate = zakazkyData.find(z => z.id === zakazkaId);
       if (zakazkaToUpdate && currentUser?.id) {
         try {
