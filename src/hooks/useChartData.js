@@ -25,23 +25,23 @@ export const useChartData = (zakazkyData) => {
         if (dateParts.length >= 3) {
           const day = parseInt(dateParts[0]) || 1;
           month = parseInt(dateParts[1]) - 1;
-          year = parseInt(dateParts[2]) || 2025;
+          year = parseInt(dateParts[2]) || new Date().getFullYear();
           parsedDate = new Date(year, month, day);
         } else if (dateParts.length === 2) {
           const day = 1;
           month = parseInt(dateParts[0]) - 1;
-          year = parseInt(dateParts[1]) || 2025;
+          year = parseInt(dateParts[1]) || new Date().getFullYear();
           parsedDate = new Date(year, month, day);
         } else {
           month = 0;
-          year = 2025;
+          year = new Date().getFullYear();
           parsedDate = new Date(year, month, 1);
         }
       } else {
         const monthNames = ['Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen', 'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'];
         month = monthNames.indexOf(zakazka.datum);
         if (month === -1) month = 0;
-        year = 2025;
+        year = new Date().getFullYear();
         parsedDate = new Date(year, month, 1);
       }
 
@@ -87,7 +87,7 @@ export const useChartData = (zakazkyData) => {
           data: ziskData,
           backgroundColor: (context) => {
             const chart = context.chart;
-            const {ctx, chartArea} = chart;
+            const { ctx, chartArea } = chart;
             if (!chartArea) return '#4F46E5';
 
             const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
@@ -108,7 +108,7 @@ export const useChartData = (zakazkyData) => {
           data: trzbyData,
           backgroundColor: (context) => {
             const chart = context.chart;
-            const {ctx, chartArea} = chart;
+            const { ctx, chartArea } = chart;
             if (!chartArea) return '#06B6D4';
 
             const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);

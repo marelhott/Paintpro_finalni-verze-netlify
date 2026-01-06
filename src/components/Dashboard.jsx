@@ -4,17 +4,17 @@ import { Chart } from 'react-chartjs-2';
 import { Doughnut } from 'react-chartjs-2';
 import { StatCard } from './index';
 
-const Dashboard = ({ 
-  dashboardData, 
-  getCombinedChartData, 
-  combinedChartOptions, 
-  doughnutChartData, 
-  doughnutChartOptions, 
-  getMonthlyPerformance, 
-  getYearlyData, 
-  zakazkyData, 
-  hoveredCard, 
-  setHoveredCard 
+const Dashboard = ({
+  dashboardData,
+  getCombinedChartData,
+  combinedChartOptions,
+  doughnutChartData,
+  doughnutChartOptions,
+  getMonthlyPerformance,
+  getYearlyData,
+  zakazkyData,
+  hoveredCard,
+  setHoveredCard
 }) => {
   return (
     <div className="dashboard">
@@ -155,8 +155,8 @@ const Dashboard = ({
                         const y = centerY + radius * Math.sin(angle);
 
                         return (
-                          <div 
-                            key={category.label} 
+                          <div
+                            key={category.label}
                             className="label-item label-dynamic"
                             style={{
                               left: `${x}px`,
@@ -228,9 +228,9 @@ const Dashboard = ({
                       <span className="progress-value">{month.revenue.toLocaleString()} Kč</span>
                     </div>
                     <div className="progress-bar">
-                      <div 
-                        className="progress-fill revenue" 
-                        style={{width: `${month.revenuePercent}%`}}
+                      <div
+                        className="progress-fill revenue"
+                        style={{ width: `${month.revenuePercent}%` }}
                       ></div>
                     </div>
                   </div>
@@ -240,9 +240,9 @@ const Dashboard = ({
                       <span className="progress-value">{month.orders}</span>
                     </div>
                     <div className="progress-bar">
-                      <div 
-                        className="progress-fill orders" 
-                        style={{width: `${month.ordersPercent}%`}}
+                      <div
+                        className="progress-fill orders"
+                        style={{ width: `${month.ordersPercent}%` }}
                       ></div>
                     </div>
                   </div>
@@ -258,7 +258,7 @@ const Dashboard = ({
             <h3>Roční výkonnost</h3>
           </div>
           <div className="yearly-performance">
-            <div className="year-title">2025</div>
+            <div className="year-title">{new Date().getFullYear()}</div>
             <div className="progress-group">
               <div className="progress-item">
                 <div className="progress-label">
@@ -266,9 +266,9 @@ const Dashboard = ({
                   <span className="progress-value">{getYearlyData().revenue.toLocaleString()} Kč</span>
                 </div>
                 <div className="progress-bar">
-                  <div 
-                    className="progress-fill revenue" 
-                    style={{width: `${getYearlyData().revenuePercent}%`}}
+                  <div
+                    className="progress-fill revenue"
+                    style={{ width: `${getYearlyData().revenuePercent}%` }}
                   ></div>
                 </div>
               </div>
@@ -278,9 +278,9 @@ const Dashboard = ({
                   <span className="progress-value">{getYearlyData().orders}</span>
                 </div>
                 <div className="progress-bar">
-                  <div 
-                    className="progress-fill orders" 
-                    style={{width: `${getYearlyData().ordersPercent}%`}}
+                  <div
+                    className="progress-fill orders"
+                    style={{ width: `${getYearlyData().ordersPercent}%` }}
                   ></div>
                 </div>
               </div>

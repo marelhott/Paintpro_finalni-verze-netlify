@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback, Suspense, lazy } from 'react';
 import './App.css';
 import './ModernIcons.css';
 import html2pdf from 'html2pdf.js';
-import CalendarComponent from './CalendarComponent';
-import CalculatorComponent from './CalculatorComponent';
+
+// Lazy loaded components - code splitting
+const CalendarComponent = lazy(() => import('./CalendarComponent'));
+const CalculatorComponent = lazy(() => import('./CalculatorComponent'));
 import { AuthProvider, useAuth } from './AuthContext';
 import LoginScreen from './LoginScreen';
 import {
@@ -22,6 +24,7 @@ import {
 import { Bar, Doughnut, Line, Chart } from 'react-chartjs-2';
 import OptimizedOrderTable from './OptimizedOrderTable';
 import { StatCard, Sidebar, FileUploadCell, ReportsSection, MapSection } from './components';
+import LoadingSpinner from './components/LoadingSpinner';
 import { useZakazkyStatistics, useChartData } from './hooks';
 import { exportCompletePDF } from './utils';
 
@@ -72,7 +75,7 @@ const PaintPro = () => {
   // OPRAVA: Inicializace zakazkyData jako prázdné pole
   const [zakazkyData, setZakazkyData] = useState([]);
 
-  
+
 
   // Načtení dat při přihlášení uživatele
   useEffect(() => {
@@ -81,33 +84,33 @@ const PaintPro = () => {
         try {
           console.log('🔄 Načítám data pro uživatele:', currentUser.id);
           const data = await getUserData(currentUser.id);
-          
+
           // OPRAVA: Bezpečná kontrola dat z AuthContext
           let safeData = Array.isArray(data) ? data : [];
           console.log('📋 Načteno ze AuthContext:', safeData.length, 'zakázek');
-          
+
           // PŘESUN: Přesun hodnot z fee do pomocník a přepočítání zisku
           const updatedData = safeData.map(zakazka => {
             let updatedZakazka = { ...zakazka };
-            
+
             // Pokud má fee hodnotu a pomocník je 0, přesuň fee do pomocník
             if (zakazka.fee > 0 && zakazka.pomocnik === 0) {
               updatedZakazka.pomocnik = zakazka.fee;
               updatedZakazka.fee = 0;
             }
-            
+
             // Přepočítej zisk podle aktuálních hodnot
             const castka = Number(updatedZakazka.castka) || 0;
             const fee = Number(updatedZakazka.fee) || 0;
             const material = Number(updatedZakazka.material) || 0;
             const pomocnik = Number(updatedZakazka.pomocnik) || 0;
             const palivo = Number(updatedZakazka.palivo) || 0;
-            
+
             updatedZakazka.zisk = castka - fee - material - pomocnik - palivo;
-            
+
             return updatedZakazka;
           });
-          
+
           setZakazkyData(updatedData);
           console.log('✅ Data zpracována a nastavena, celkem zakázek:', updatedData.length);
         } catch (error) {
@@ -171,7 +174,7 @@ const PaintPro = () => {
     try {
       console.log('🔄 handleAddZakazka volána s daty:', zakazkaData);
       const updatedData = await addUserOrder(currentUser.id, zakazkaData);
-      
+
       // addUserOrder nyní vrací kompletní seznam zakázek
       if (Array.isArray(updatedData)) {
         setZakazkyData(updatedData);
@@ -186,7 +189,7 @@ const PaintPro = () => {
     } catch (error) {
       console.error('❌ Chyba při přidávání zakázky:', error);
       alert('Chyba při přidávání zakázky: ' + error.message);
-      
+
       // Znovu načti data z localStorage pro jistotu
       if (currentUser?.id) {
         try {
@@ -205,7 +208,7 @@ const PaintPro = () => {
     try {
       console.log('🔄 handleEditZakazka volána s ID:', editingZakazka.id, 'data:', zakazkaData);
       const updatedData = await editUserOrder(currentUser.id, editingZakazka.id, zakazkaData);
-      
+
       // editUserOrder nyní vrací kompletní seznam zakázek
       if (Array.isArray(updatedData)) {
         setZakazkyData(updatedData);
@@ -217,7 +220,7 @@ const PaintPro = () => {
         const safeRefreshedData = Array.isArray(refreshedData) ? refreshedData : [];
         setZakazkyData(safeRefreshedData);
       }
-      
+
       setEditingZakazka(null);
       setShowEditModal(false);
     } catch (error) {
@@ -241,13 +244,14 @@ const PaintPro = () => {
     }
   };
   const getMonthlyPerformance = () => {
+    const currentYear = new Date().getFullYear();
     const monthNames = ['Led', 'Úno', 'Bře', 'Dub', 'Kvě', 'Čer', 'Čvc', 'Srp', 'Zář', 'Říj', 'Lis', 'Pro'];
     const monthlyData = {};
 
     // Inicializace všech měsíců
     for (let i = 0; i < 12; i++) {
-      const key = `2025-${String(i + 1).padStart(2, '0')}`;
-      monthlyData[key] = { revenue: 0, orders: 0, month: i, year: 2025 };
+      const key = `${currentYear}-${String(i + 1).padStart(2, '0')}`;
+      monthlyData[key] = { revenue: 0, orders: 0, month: i, year: currentYear };
     }
 
     // Agregace dat ze zakázek - OPRAVENO pro bezpečnost
@@ -285,7 +289,7 @@ const PaintPro = () => {
 
   // Funkce pro roční výkonnost - optimalizováno s useMemo
   const getYearlyData = () => {
-    const currentYear = 2025;
+    const currentYear = new Date().getFullYear();
     const yearData = zakazkyData
       .filter(zakazka => {
         const date = new Date(zakazka.datum.split('. ').reverse().join('-'));
@@ -343,7 +347,7 @@ const PaintPro = () => {
   const handleFilesUpdate = useCallback(async (zakazkaId, newFiles) => {
     try {
       console.log(`🔄 Aktualizuji soubory pro zakázku ${zakazkaId}, počet souborů: ${newFiles.length}`);
-      
+
       // Najdi zakázku v aktuálních datech
       const updatedZakazky = zakazkyData.map(zakazka => {
         if (zakazka.id === zakazkaId) {
@@ -379,7 +383,7 @@ const PaintPro = () => {
 
 
 
-  
+
 
   const combinedChartOptions = {
     responsive: true,
@@ -420,7 +424,7 @@ const PaintPro = () => {
         },
         padding: 12,
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             return `${context.dataset.label}: ${context.parsed.y.toLocaleString()} Kč`;
           }
         }
@@ -453,7 +457,7 @@ const PaintPro = () => {
             size: 11,
             letterSpacing: '0.2px',
           },
-          callback: function(value) {
+          callback: function (value) {
             return value.toLocaleString() + ' Kč';
           }
         },
@@ -542,7 +546,7 @@ const PaintPro = () => {
         },
         padding: 12,
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             const total = context.dataset.data.reduce((sum, value) => sum + value, 0);
             const percentage = Math.round((context.raw / total) * 100);
             return `${context.label}: ${percentage}% (${context.raw.toLocaleString()} Kč)`;
@@ -567,9 +571,9 @@ const PaintPro = () => {
     }
   };
 
-  
 
-  
+
+
 
   const Dashboard = () => (
     <div className="dashboard">
@@ -710,8 +714,8 @@ const PaintPro = () => {
                         const y = centerY + radius * Math.sin(angle);
 
                         return (
-                          <div 
-                            key={category.label} 
+                          <div
+                            key={category.label}
                             className="label-item label-dynamic"
                             style={{
                               left: `${x}px`,
@@ -783,9 +787,9 @@ const PaintPro = () => {
                       <span className="progress-value">{month.revenue.toLocaleString()} Kč</span>
                     </div>
                     <div className="progress-bar">
-                      <div 
-                        className="progress-fill revenue" 
-                        style={{width: `${month.revenuePercent}%`}}
+                      <div
+                        className="progress-fill revenue"
+                        style={{ width: `${month.revenuePercent}%` }}
                       ></div>
                     </div>
                   </div>
@@ -795,9 +799,9 @@ const PaintPro = () => {
                       <span className="progress-value">{month.orders}</span>
                     </div>
                     <div className="progress-bar">
-                      <div 
-                        className="progress-fill orders" 
-                        style={{width: `${month.ordersPercent}%`}}
+                      <div
+                        className="progress-fill orders"
+                        style={{ width: `${month.ordersPercent}%` }}
                       ></div>
                     </div>
                   </div>
@@ -813,7 +817,7 @@ const PaintPro = () => {
             <h3>Roční výkonnost</h3>
           </div>
           <div className="yearly-performance">
-            <div className="year-title">2025</div>
+            <div className="year-title">{new Date().getFullYear()}</div>
             <div className="progress-group">
               <div className="progress-item">
                 <div className="progress-label">
@@ -821,9 +825,9 @@ const PaintPro = () => {
                   <span className="progress-value">{getYearlyData().revenue.toLocaleString()} Kč</span>
                 </div>
                 <div className="progress-bar">
-                  <div 
-                    className="progress-fill revenue" 
-                    style={{width: `${getYearlyData().revenuePercent}%`}}
+                  <div
+                    className="progress-fill revenue"
+                    style={{ width: `${getYearlyData().revenuePercent}%` }}
                   ></div>
                 </div>
               </div>
@@ -833,9 +837,9 @@ const PaintPro = () => {
                   <span className="progress-value">{getYearlyData().orders}</span>
                 </div>
                 <div className="progress-bar">
-                  <div 
-                    className="progress-fill orders" 
-                    style={{width: `${getYearlyData().ordersPercent}%`}}
+                  <div
+                    className="progress-fill orders"
+                    style={{ width: `${getYearlyData().ordersPercent}%` }}
                   ></div>
                 </div>
               </div>
@@ -977,7 +981,7 @@ const PaintPro = () => {
           poznamky: `${prev.poznamky}\n\nAutomaticky extrahováno z ${file.name}:\n${text.substring(0, 200)}...`.trim()
         }));
 
-        alert(`✅ Text úspěšně extrahován z obrázku!\n\nNalezené údaje:\n${Object.entries(extractedData).filter(([k,v]) => v).map(([k,v]) => `${k}: ${v}`).join('\n')}`);
+        alert(`✅ Text úspěšně extrahován z obrázku!\n\nNalezené údaje:\n${Object.entries(extractedData).filter(([k, v]) => v).map(([k, v]) => `${k}: ${v}`).join('\n')}`);
 
       } catch (error) {
         console.error('❌ Chyba při OCR:', error);
@@ -1006,26 +1010,26 @@ const PaintPro = () => {
       const patterns = {
         // Telefonní čísla (české formáty)
         phone: /(\+420\s?)?[0-9]{3}\s?[0-9]{3}\s?[0-9]{3}/g,
-        
+
         // Částky - vylepšené rozpoznávání
         amount: /(\d{1,3}(?:[,.\s]\d{3})*(?:[,.]\d{2})?)\s*(?:kč|czk|eur|€|korun?|crowns?)/gi,
         amountSimple: /\b(\d{3,})\b/g, // Jednoduchá částka bez měny
-        
+
         // Datum - více formátů
         date: /(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/g,
         dateWithText: /(datum|date)[\s:]*(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/gi,
-        
+
         // Číslo faktury/zakázky
         invoice: /(faktura|invoice|číslo|number|zakázka|order)[\s:]*([a-z0-9\-\/]+)/gi,
         invoiceSimple: /[a-z]{2,4}[\-_]?\d{3,}/gi,
-        
+
         // PSČ a město (české PSČ)
         postal: /(\d{3}\s?\d{2})\s+([a-záčďéěíňóřšťúůýž\s]+)/gi,
         address: /(ulice|street|adresa|address)[\s:]*([^,\n]+)/gi,
-        
+
         // Email
         email: /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi,
-        
+
         // Jména - vylepšené rozpoznávání
         personName: /\b[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]{2,}\s+[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]{2,}\b/g,
         clientField: /(klient|client|jméno|name|zákazník|customer)[\s:]*([a-záčďéěíňóřšťúůýž\s]+)/gi
@@ -1033,7 +1037,7 @@ const PaintPro = () => {
 
       // 1. EXTRAKCE KLIENTA/JMÉNA - nejvyšší priorita
       console.log('🔍 Hledám jméno klienta...');
-      
+
       // Nejdřív hledej explicitní označení klienta
       const clientFieldMatch = originalText.match(patterns.clientField);
       if (clientFieldMatch) {
@@ -1050,18 +1054,18 @@ const PaintPro = () => {
         if (nameMatches && nameMatches.length > 0) {
           // Vyfiltruj nechtěná jména
           const blacklistedNames = [
-            'Praha', 'Česká', 'Republika', 'Telefon', 'Email', 'Adresa', 
+            'Praha', 'Česká', 'Republika', 'Telefon', 'Email', 'Adresa',
             'Faktura', 'Invoice', 'Částka', 'Amount', 'Datum', 'Date',
             'Malování', 'Montáž', 'Korálek', 'Adam', 'Czech', 'Republic'
           ];
-          
+
           const validNames = nameMatches.filter(name => {
             const nameParts = name.split(' ');
-            return !blacklistedNames.some(blacklisted => 
+            return !blacklistedNames.some(blacklisted =>
               nameParts.some(part => part.toLowerCase().includes(blacklisted.toLowerCase()))
             );
           });
-          
+
           if (validNames.length > 0) {
             extractedData.klient = validNames[0];
             console.log('✅ Nalezen klient (pattern):', validNames[0]);
@@ -1071,7 +1075,7 @@ const PaintPro = () => {
 
       // 2. EXTRAKCE ČÁSTKY
       console.log('🔍 Hledám částku...');
-      
+
       // Nejdřív hledej částky s měnou
       const amountMatches = originalText.match(patterns.amount);
       if (amountMatches && amountMatches.length > 0) {
@@ -1080,7 +1084,7 @@ const PaintPro = () => {
           const numStr = match.match(/\d{1,3}(?:[,.\s]\d{3})*(?:[,.]\d{2})?/)[0];
           return parseFloat(numStr.replace(/[,.\s]/g, '').slice(0, -2) + '.' + numStr.slice(-2));
         });
-        
+
         const maxAmount = Math.max(...amounts);
         if (maxAmount > 100) { // Rozumná minimální částka
           extractedData.castka = Math.round(maxAmount);
@@ -1102,7 +1106,7 @@ const PaintPro = () => {
 
       // 3. EXTRAKCE DATUMU
       console.log('🔍 Hledám datum...');
-      
+
       const dateWithTextMatch = originalText.match(patterns.dateWithText);
       if (dateWithTextMatch) {
         const match = dateWithTextMatch[0].match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/);
@@ -1124,7 +1128,7 @@ const PaintPro = () => {
 
       // 4. EXTRAKCE ČÍSLA ZAKÁZKY
       console.log('🔍 Hledám číslo zakázky...');
-      
+
       const invoiceMatch = originalText.match(patterns.invoice);
       if (invoiceMatch) {
         const invoiceNumber = invoiceMatch[0].split(/[\s:]+/).pop().trim();
@@ -1144,7 +1148,7 @@ const PaintPro = () => {
 
       // 5. EXTRAKCE ADRESY
       console.log('🔍 Hledám adresu...');
-      
+
       // Hledej explicitní pole adresy
       const addressFieldMatch = originalText.match(patterns.address);
       if (addressFieldMatch) {
@@ -1166,7 +1170,7 @@ const PaintPro = () => {
 
       // 6. AUTOMATICKÁ KLASIFIKACE DRUHU PRÁCE
       console.log('🔍 Klasifikuji druh práce...');
-      
+
       const workTypeKeywords = {
         'MVČ': ['malování', 'malíř', 'nátěr', 'barva', 'stěna', 'paint', 'painting', 'wall'],
         'Adam': ['montáž', 'instalace', 'sestavení', 'oprava', 'installation', 'assembly', 'repair'],
@@ -1204,8 +1208,8 @@ const PaintPro = () => {
     if (!showAddModal) return null;
 
     return (
-      <div 
-        className="modal-overlay" 
+      <div
+        className="modal-overlay"
         onMouseDown={(e) => {
           // Zavřít pouze při kliknutí přímo na overlay, ne na vnitřní obsah
           if (e.target === e.currentTarget) {
@@ -1235,7 +1239,7 @@ const PaintPro = () => {
               onChange={handleOcrUpload}
               style={{ display: 'none' }}
             />
-            
+
             {!isOcrProcessing ? (
               <div>
                 <div style={{ fontSize: '24px', marginBottom: '8px' }}>📄</div>
@@ -1297,7 +1301,7 @@ const PaintPro = () => {
                 <input
                   type="date"
                   value={formData.datum}
-                  onChange={e => setFormData({...formData, datum: e.target.value})}
+                  onChange={e => setFormData({ ...formData, datum: e.target.value })}
                 />
               </div>
               <div className="form-group">
@@ -1305,7 +1309,7 @@ const PaintPro = () => {
                 <input
                   type="text"
                   value={formData.druh}
-                  onChange={e => setFormData({...formData, druh: e.target.value})}
+                  onChange={e => setFormData({ ...formData, druh: e.target.value })}
                   placeholder="Vložit druh práce"
                   list="work-categories-list"
                 />
@@ -1322,7 +1326,7 @@ const PaintPro = () => {
                 <input
                   type="text"
                   value={formData.klient}
-                  onChange={e => setFormData({...formData, klient: e.target.value})}
+                  onChange={e => setFormData({ ...formData, klient: e.target.value })}
                   placeholder="Jméno klienta"
                 />
               </div>
@@ -1331,7 +1335,7 @@ const PaintPro = () => {
                 <input
                   type="text"
                   value={formData.cislo}
-                  onChange={e => setFormData({...formData, cislo: e.target.value})}
+                  onChange={e => setFormData({ ...formData, cislo: e.target.value })}
                   placeholder="Číslo zakázky"
                 />
               </div>
@@ -1341,7 +1345,7 @@ const PaintPro = () => {
               <input
                 type="text"
                 value={formData.adresa}
-                onChange={e => setFormData({...formData, adresa: e.target.value})}
+                onChange={e => setFormData({ ...formData, adresa: e.target.value })}
                 placeholder="Zadejte adresu kde se práce realizovala"
               />
             </div>
@@ -1351,7 +1355,7 @@ const PaintPro = () => {
                 <input
                   type="number"
                   value={formData.castka}
-                  onChange={e => setFormData({...formData, castka: e.target.value})}
+                  onChange={e => setFormData({ ...formData, castka: e.target.value })}
                   placeholder="0"
                 />
               </div>
@@ -1363,7 +1367,7 @@ const PaintPro = () => {
                       type="radio"
                       name="hasFee"
                       checked={formData.hasFee === false}
-                      onChange={() => setFormData({...formData, hasFee: false})}
+                      onChange={() => setFormData({ ...formData, hasFee: false })}
                       style={{ marginRight: '8px' }}
                     />
                     Ne
@@ -1373,7 +1377,7 @@ const PaintPro = () => {
                       type="radio"
                       name="hasFee"
                       checked={formData.hasFee === true}
-                      onChange={() => setFormData({...formData, hasFee: true})}
+                      onChange={() => setFormData({ ...formData, hasFee: true })}
                       style={{ marginRight: '8px' }}
                     />
                     Ano
@@ -1392,7 +1396,7 @@ const PaintPro = () => {
                 <input
                   type="number"
                   value={formData.material}
-                  onChange={e => setFormData({...formData, material: e.target.value})}
+                  onChange={e => setFormData({ ...formData, material: e.target.value })}
                   placeholder="0"
                 />
               </div>
@@ -1401,7 +1405,7 @@ const PaintPro = () => {
                 <input
                   type="number"
                   value={formData.pomocnik}
-                  onChange={e => setFormData({...formData, pomocnik: e.target.value})}
+                  onChange={e => setFormData({ ...formData, pomocnik: e.target.value })}
                   placeholder="0"
                 />
               </div>
@@ -1412,7 +1416,7 @@ const PaintPro = () => {
                 <input
                   type="number"
                   value={formData.palivo}
-                  onChange={e => setFormData({...formData, palivo: e.target.value})}
+                  onChange={e => setFormData({ ...formData, palivo: e.target.value })}
                   placeholder="0"
                 />
               </div>
@@ -1422,7 +1426,7 @@ const PaintPro = () => {
                   type="number"
                   min="1"
                   value={formData.delkaRealizace}
-                  onChange={e => setFormData({...formData, delkaRealizace: e.target.value})}
+                  onChange={e => setFormData({ ...formData, delkaRealizace: e.target.value })}
                   placeholder="1"
                 />
               </div>
@@ -1432,7 +1436,7 @@ const PaintPro = () => {
                 <label>Typ objektu</label>
                 <select
                   value={formData.typ}
-                  onChange={e => setFormData({...formData, typ: e.target.value})}
+                  onChange={e => setFormData({ ...formData, typ: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -1456,7 +1460,7 @@ const PaintPro = () => {
               <label>Poznámky</label>
               <textarea
                 value={formData.poznamky}
-                onChange={e => setFormData({...formData, poznamky: e.target.value})}
+                onChange={e => setFormData({ ...formData, poznamky: e.target.value })}
                 placeholder="Volitelné poznámky k zakázce"
                 rows="3"
                 style={{
@@ -1526,8 +1530,8 @@ const PaintPro = () => {
     if (!showEditModal || !editingZakazka) return null;
 
     return (
-      <div 
-        className="modal-overlay" 
+      <div
+        className="modal-overlay"
         onMouseDown={(e) => {
           // Zavřít pouze při kliknutí přímo na overlay, ne na vnitřní obsah
           if (e.target === e.currentTarget) {
@@ -1547,7 +1551,7 @@ const PaintPro = () => {
                 <input
                   type="date"
                   value={formData.datum}
-                  onChange={e => setFormData({...formData, datum: e.target.value})}
+                  onChange={e => setFormData({ ...formData, datum: e.target.value })}
                   required
                 />
               </div>
@@ -1556,7 +1560,7 @@ const PaintPro = () => {
                 <input
                   type="text"
                   value={formData.klient}
-                  onChange={e => setFormData({...formData, klient: e.target.value})}
+                  onChange={e => setFormData({ ...formData, klient: e.target.value })}
                   required
                 />
               </div>
@@ -1567,7 +1571,7 @@ const PaintPro = () => {
                 <input
                   type="text"
                   value={formData.druh || ''}
-                  onChange={e => setFormData({...formData, druh: e.target.value})}
+                  onChange={e => setFormData({ ...formData, druh: e.target.value })}
                   placeholder="Vložit druh práce"
                   list="work-categories-list-edit"
                 />
@@ -1582,7 +1586,7 @@ const PaintPro = () => {
                 <input
                   type="text"
                   value={formData.cislo}
-                  onChange={e => setFormData({...formData, cislo: e.target.value})}
+                  onChange={e => setFormData({ ...formData, cislo: e.target.value })}
                   required
                 />
               </div>
@@ -1592,7 +1596,7 @@ const PaintPro = () => {
               <input
                 type="text"
                 value={formData.adresa || ''}
-                onChange={e => setFormData({...formData, adresa: e.target.value})}
+                onChange={e => setFormData({ ...formData, adresa: e.target.value })}
                 placeholder="Zadejte adresu kde se práce realizovala"
               />
             </div>
@@ -1602,7 +1606,7 @@ const PaintPro = () => {
                 <input
                   type="number"
                   value={formData.castka}
-                  onChange={e => setFormData({...formData, castka: e.target.value})}
+                  onChange={e => setFormData({ ...formData, castka: e.target.value })}
                   required
                 />
               </div>
@@ -1611,7 +1615,7 @@ const PaintPro = () => {
                 <input
                   type="number"
                   value={formData.fee}
-                  onChange={e => setFormData({...formData, fee: e.target.value})}
+                  onChange={e => setFormData({ ...formData, fee: e.target.value })}
                 />
               </div>
             </div>
@@ -1621,7 +1625,7 @@ const PaintPro = () => {
                 <input
                   type="number"
                   value={formData.material}
-                  onChange={e => setFormData({...formData, material: e.target.value})}
+                  onChange={e => setFormData({ ...formData, material: e.target.value })}
                 />
               </div>
               <div className="form-group">
@@ -1629,7 +1633,7 @@ const PaintPro = () => {
                 <input
                   type="number"
                   value={formData.pomocnik}
-                  onChange={e => setFormData({...formData, pomocnik: e.target.value})}
+                  onChange={e => setFormData({ ...formData, pomocnik: e.target.value })}
                 />
               </div>
             </div>
@@ -1638,7 +1642,7 @@ const PaintPro = () => {
               <input
                 type="number"
                 value={formData.palivo}
-                onChange={e => setFormData({...formData, palivo: e.target.value})}
+                onChange={e => setFormData({ ...formData, palivo: e.target.value })}
               />
             </div>
             <div className="modal-actions">
@@ -1700,12 +1704,12 @@ const PaintPro = () => {
         alert('❌ Chyba při importu CSV souboru: ' + error.message);
       }
     };
-    
+
     reader.onerror = (error) => {
       console.error('❌ Chyba při čtení CSV souboru:', error);
       alert('❌ Chyba při čtení CSV souboru');
     };
-    
+
     reader.readAsText(file);
     event.target.value = ''; // Reset input
   };
@@ -1715,7 +1719,7 @@ const PaintPro = () => {
     try {
       // Použijeme filtrované hlavní zakázky (bez kalendářových)
       const dataToExport = filterMainOrdersOnly(zakazkyData);
-      
+
       if (dataToExport.length === 0) {
         alert('❌ Žádné zakázky k exportu');
         return;
@@ -1772,7 +1776,7 @@ const PaintPro = () => {
       // Create and download file
       const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
-      
+
       if (navigator.msSaveBlob) { // IE 10+
         navigator.msSaveBlob(blob, filename);
       } else {
@@ -1786,7 +1790,7 @@ const PaintPro = () => {
       }
 
       alert(`✅ Export dokončen! Exportováno ${dataToExport.length} zakázek do CSV souboru.`);
-      
+
     } catch (error) {
       console.error('Chyba při exportu CSV:', error);
       alert('❌ Chyba při exportu CSV souboru');
@@ -1852,7 +1856,7 @@ const PaintPro = () => {
             <div className="filter-row">
               <div className="filter-item">
                 <label>Druh práce</label>
-                <select 
+                <select
                   value={filterDruhPrace}
                   onChange={(e) => setFilterDruhPrace(e.target.value)}
                 >
@@ -1864,32 +1868,32 @@ const PaintPro = () => {
               </div>
               <div className="filter-item">
                 <label>Klient</label>
-                <input 
-                  type="text" 
-                  placeholder="Hledat podle jména klienta..." 
+                <input
+                  type="text"
+                  placeholder="Hledat podle jména klienta..."
                   value={searchClient}
                   onChange={(e) => setSearchClient(e.target.value)}
                 />
               </div>
               <div className="filter-item">
                 <label>Datum od</label>
-                <input 
-                  type="date" 
+                <input
+                  type="date"
                   value={filterDateFrom}
                   onChange={(e) => setFilterDateFrom(e.target.value)}
                 />
               </div>
               <div className="filter-item">
                 <label>Datum do</label>
-                <input 
-                  type="date" 
+                <input
+                  type="date"
                   value={filterDateTo}
                   onChange={(e) => setFilterDateTo(e.target.value)}
                 />
               </div>
             </div>
             <div className="filter-actions">
-              <button 
+              <button
                 className="btn btn-secondary btn-small"
                 onClick={() => {
                   setSearchClient('');
@@ -1913,7 +1917,7 @@ const PaintPro = () => {
             const filteredZakazky = filterMainOrdersOnly(zakazkyData)
               .filter(zakazka => {
                 // Filtr podle klienta
-                const clientMatch = searchClient === '' || 
+                const clientMatch = searchClient === '' ||
                   zakazka.klient.toLowerCase().includes(searchClient.toLowerCase());
 
                 // Filtr podle druhu práce  
@@ -1963,7 +1967,7 @@ const PaintPro = () => {
           })()}
         </div>
 
-        
+
       </div>
     </div>
   );
@@ -1979,7 +1983,7 @@ const PaintPro = () => {
         const filteredData = zakazkyData.filter(zakazka => {
           const zakazkaDate = new Date(zakazka.datum.split('. ').reverse().join('-'));
 
-          switch(period) {
+          switch (period) {
             case 'week':
               const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
               return zakazkaDate >= weekAgo;
@@ -2035,7 +2039,7 @@ const PaintPro = () => {
           borderColor: dataset.color,
           backgroundColor: (context) => {
             const chart = context.chart;
-            const {ctx, chartArea} = chart;
+            const { ctx, chartArea } = chart;
             if (!chartArea) return;
             const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
             gradient.addColorStop(0, dataset.color.replace('1)', '0.1)'));
@@ -2070,10 +2074,10 @@ const PaintPro = () => {
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
         if (!monthlyData[key]) {
-          monthlyData[key] = { 
-            Adam: 0, 
-            MVČ: 0, 
-            Korálek: 0, 
+          monthlyData[key] = {
+            Adam: 0,
+            MVČ: 0,
+            Korálek: 0,
             Ostatní: 0,
             month: date.getMonth(),
             year: date.getFullYear()
@@ -2130,9 +2134,9 @@ const PaintPro = () => {
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
         if (!monthlyData[key]) {
-          monthlyData[key] = { 
-            trzby: 0, 
-            zisk: 0, 
+          monthlyData[key] = {
+            trzby: 0,
+            zisk: 0,
             cistyZisk: 0,
             month: date.getMonth(),
             year: date.getFullYear()
@@ -2239,10 +2243,10 @@ const PaintPro = () => {
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
         if (!monthlyData[key]) {
-          monthlyData[key] = { 
-            fee: 0, 
-            pomocnik: 0, 
-            material: 0, 
+          monthlyData[key] = {
+            fee: 0,
+            pomocnik: 0,
+            material: 0,
             palivo: 0,
             month: date.getMonth(),
             year: date.getFullYear()
@@ -2292,7 +2296,7 @@ const PaintPro = () => {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { 
+        legend: {
           display: true,
           position: 'bottom',
           labels: {
@@ -2324,7 +2328,7 @@ const PaintPro = () => {
           },
           padding: 10,
           callbacks: {
-            label: function(context) {
+            label: function (context) {
               return `${context.dataset.label}: ${context.parsed.y.toLocaleString()} Kč`;
             }
           }
@@ -2333,9 +2337,9 @@ const PaintPro = () => {
       scales: {
         x: {
           grid: { color: 'rgba(148, 163, 184, 0.2)', drawBorder: false },
-          ticks: { 
-            color: 'var(--text-chart)', 
-            font: { 
+          ticks: {
+            color: 'var(--text-chart)',
+            font: {
               size: 9,
               letterSpacing: '0.2px',
             },
@@ -2345,13 +2349,13 @@ const PaintPro = () => {
         y: {
           beginAtZero: true,
           grid: { color: 'rgba(148, 163, 184, 0.2)', drawBorder: false },
-          ticks: { 
-            color: 'var(--text-chart)', 
-            font: { 
+          ticks: {
+            color: 'var(--text-chart)',
+            font: {
               size: 9,
               letterSpacing: '0.2px',
             },
-            callback: function(value) {
+            callback: function (value) {
               return value.toLocaleString();
             }
           },
@@ -2367,18 +2371,18 @@ const PaintPro = () => {
       }, {});
 
       const sorted = Object.entries(clientTotals)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([, a], [, b]) => b - a)
         .slice(0, 5);
 
       return {
         labels: sorted.map(([name]) => name),
         datasets: [{
           label: 'Zisk klientů',
-          data: sorted.map(([,value]) => value),
+          data: sorted.map(([, value]) => value),
           borderColor: '#4F46E5',
           backgroundColor: (context) => {
             const chart = context.chart;
-            const {ctx, chartArea} = chart;
+            const { ctx, chartArea } = chart;
             if (!chartArea) return 'rgba(79, 70, 229, 0.1)';
 
             const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
@@ -2524,7 +2528,7 @@ const PaintPro = () => {
             acc[z.klient] = (acc[z.klient] || 0) + z.zisk;
             return acc;
           }, {})
-        ).sort(([,a], [,b]) => b - a).slice(0, 6);
+        ).sort(([, a], [, b]) => b - a).slice(0, 6);
 
         pdf.setFillColor(42, 45, 95);
         pdf.roundedRect(15, yPosition, pageWidth - 30, 50, 3, 3, 'F');
@@ -2784,35 +2788,35 @@ const PaintPro = () => {
             </div>
             <div className="chart-value-small blue">{zakazkyData.reduce((sum, z) => sum + z.castka, 0).toLocaleString()} Kč</div>
           </div>
-          
+
           <div className="chart-card-small">
             <div className="chart-header-small">
               <h3>CELKOVÝ ZISK</h3>
             </div>
             <div className="chart-value-small green">{zakazkyData.reduce((sum, z) => sum + z.zisk, 0).toLocaleString()} Kč</div>
           </div>
-          
+
           <div className="chart-card-small">
             <div className="chart-header-small">
               <h3>POČET ZAKÁZEK</h3>
             </div>
             <div className="chart-value-small purple">{zakazkyData.length}</div>
           </div>
-          
+
           <div className="chart-card-small">
             <div className="chart-header-small">
               <h3>SOUČET POMOCNÍK</h3>
             </div>
             <div className="chart-value-small orange">{zakazkyData.reduce((sum, z) => sum + z.pomocnik, 0).toLocaleString()} Kč</div>
           </div>
-          
+
           <div className="chart-card-small">
             <div className="chart-header-small">
               <h3>SOUČET MATERIÁL</h3>
             </div>
             <div className="chart-value-small blue">{zakazkyData.reduce((sum, z) => sum + z.material, 0).toLocaleString()} Kč</div>
           </div>
-          
+
           <div className="chart-card-small">
             <div className="chart-header-small">
               <h3>SOUČET PALIVO</h3>
@@ -2929,7 +2933,7 @@ const PaintPro = () => {
                     ticks: {
                       ...lineChartOptions.scales.y.ticks,
                       stepSize: 100, // Velmi jemný krok 100
-                      callback: function(value) {
+                      callback: function (value) {
                         // Detailní škála: 0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000...
                         return value.toLocaleString();
                       }
@@ -3007,7 +3011,7 @@ const PaintPro = () => {
                         size: 11,
                         weight: '500'
                       },
-                      callback: function(value) {
+                      callback: function (value) {
                         return value.toLocaleString() + ' Kč';
                       }
                     }
@@ -3076,7 +3080,7 @@ const PaintPro = () => {
                   });
 
                   return Object.entries(clientStats)
-                    .sort(([,a], [,b]) => b.zisk - a.zisk)
+                    .sort(([, a], [, b]) => b.zisk - a.zisk)
                     .slice(0, 8)
                     .map(([klient]) => klient.length > 15 ? klient.substring(0, 12) + '...' : klient);
                 })(),
@@ -3095,9 +3099,9 @@ const PaintPro = () => {
                       });
 
                       return Object.entries(clientStats)
-                        .sort(([,a], [,b]) => b.zisk - a.zisk)
+                        .sort(([, a], [, b]) => b.zisk - a.zisk)
                         .slice(0, 8)
-                        .map(([,stats]) => stats.zisk);
+                        .map(([, stats]) => stats.zisk);
                     })(),
                     backgroundColor: 'rgba(139, 92, 246, 0.8)',
                     borderColor: 'rgba(139, 92, 246, 1)',
@@ -3119,9 +3123,9 @@ const PaintPro = () => {
                       });
 
                       return Object.entries(clientStats)
-                        .sort(([,a], [,b]) => b.zisk - a.zisk)
+                        .sort(([, a], [, b]) => b.zisk - a.zisk)
                         .slice(0, 8)
-                        .map(([,stats]) => stats.trzby);
+                        .map(([, stats]) => stats.trzby);
                     })(),
                     backgroundColor: 'rgba(59, 130, 246, 0.6)',
                     borderColor: 'rgba(59, 130, 246, 1)',
@@ -3151,7 +3155,7 @@ const PaintPro = () => {
                     ticks: {
                       color: '#6b7280',
                       font: { size: 11, weight: '500' },
-                      callback: function(value) {
+                      callback: function (value) {
                         return value.toLocaleString() + ' Kč';
                       }
                     }
@@ -3177,7 +3181,7 @@ const PaintPro = () => {
                     borderWidth: 1,
                     cornerRadius: 12,
                     callbacks: {
-                      label: function(context) {
+                      label: function (context) {
                         return `${context.dataset.label}: ${context.parsed.y.toLocaleString()} Kč`;
                       }
                     }
@@ -3251,7 +3255,7 @@ const PaintPro = () => {
                         areaStats[area].pocet += 1;
                       });
 
-                      return Object.values(areaStats).map(stats => 
+                      return Object.values(areaStats).map(stats =>
                         stats.trzby > 0 ? Math.round((stats.zisk / stats.trzby) * 100) : 0
                       );
                     })(),
@@ -3331,7 +3335,7 @@ const PaintPro = () => {
                     ticks: {
                       color: '#6b7280',
                       font: { size: 11, weight: '500' },
-                      callback: function(value) {
+                      callback: function (value) {
                         return value + '%';
                       }
                     }
@@ -3370,7 +3374,7 @@ const PaintPro = () => {
                     borderWidth: 1,
                     cornerRadius: 12,
                     callbacks: {
-                      label: function(context) {
+                      label: function (context) {
                         if (context.dataset.label === 'Marže (%)') {
                           return `${context.dataset.label}: ${context.parsed.y}%`;
                         } else {
@@ -3482,7 +3486,7 @@ const PaintPro = () => {
                   ticks: {
                     color: '#6b7280',
                     font: { size: 11, weight: '500' },
-                    callback: function(value) {
+                    callback: function (value) {
                       return value.toLocaleString() + ' Kč';
                     }
                   }
@@ -3508,7 +3512,7 @@ const PaintPro = () => {
                   borderWidth: 1,
                   cornerRadius: 12,
                   callbacks: {
-                    label: function(context) {
+                    label: function (context) {
                       return `${context.dataset.label}: ${context.parsed.y.toLocaleString()} Kč`;
                     }
                   }
@@ -3596,12 +3600,12 @@ const PaintPro = () => {
     const filesCount = zakazka.soubory?.length || 0;
     const hasFiles = filesCount > 0;
 
-    console.log('🔍 FileUploadCell debug:', { 
-      zakazkaId: zakazka.id, 
-      filesCount, 
-      hasFiles, 
+    console.log('🔍 FileUploadCell debug:', {
+      zakazkaId: zakazka.id,
+      filesCount,
+      hasFiles,
       soubory: zakazka.soubory,
-      showDropdown 
+      showDropdown
     });
 
     return (
@@ -3636,7 +3640,7 @@ const PaintPro = () => {
         ) : (
           // Zobrazí počet souborů s hover efektem
           <div style={{ position: 'relative', display: 'inline-block' }}>
-            <span 
+            <span
               style={{
                 background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
                 color: 'white',
@@ -3664,7 +3668,7 @@ const PaintPro = () => {
             </span>
 
             {showDropdown && (
-              <div 
+              <div
                 style={{
                   position: 'fixed',
                   top: '50%',
@@ -3683,9 +3687,9 @@ const PaintPro = () => {
               >
                 <h4 style={{ margin: '0 0 12px 0', color: '#333' }}>Nahrané soubory:</h4>
                 {zakazka.soubory.map((file, index) => (
-                  <div key={file.id || index} style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
+                  <div key={file.id || index} style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
                     alignItems: 'center',
                     padding: '8px 0',
                     borderBottom: index < zakazka.soubory.length - 1 ? '1px solid #eee' : 'none'
@@ -3746,8 +3750,8 @@ const PaintPro = () => {
 
       // Praha - central areas
       const pragueAreas = [
-        'prague', 'praha', 'wenceslas', 'charles', 'old town', 'town square', 
-        'castle', 'kampa', 'vinohrady', 'smíchov', 'karlín', 'dejvice', 
+        'prague', 'praha', 'wenceslas', 'charles', 'old town', 'town square',
+        'castle', 'kampa', 'vinohrady', 'smíchov', 'karlín', 'dejvice',
         'nové město', 'břevnov', 'letohradská', 'vyžlovská', 'lužická'
       ];
 
@@ -3797,7 +3801,7 @@ const PaintPro = () => {
       };
 
       const addressLower = adresa.toLowerCase();
-      
+
       // Hledáme přesné shody nebo částečné shody
       for (const [key, coords] of Object.entries(addressMapping)) {
         if (addressLower.includes(key) || key.includes(addressLower.split(' ')[0])) {
@@ -3831,7 +3835,7 @@ const PaintPro = () => {
         try {
           // Načteme Leaflet dynamicky
           const L = await import('leaflet');
-          
+
           if (!isMounted) return;
 
           // Cleanup existing map
@@ -3949,10 +3953,10 @@ const PaintPro = () => {
           });
 
           // Přidání legendy s reálnými druhy práce
-          const legend = L.control({position: 'bottomright'});
-          legend.onAdd = function(map) {
+          const legend = L.control({ position: 'bottomright' });
+          legend.onAdd = function (map) {
             const div = L.DomUtil.create('div', 'info legend');
-            
+
             // Získání statistik pro každý druh práce
             const druhyStats = uniqueDruhyPrace.map(druh => {
               const zakazkyDruhu = zakazkyData.filter(z => z.druh === druh);
@@ -3964,7 +3968,7 @@ const PaintPro = () => {
               };
             }).sort((a, b) => b.totalRevenue - a.totalRevenue); // Seřadit podle tržeb
 
-            const legendItems = druhyStats.map(druh => 
+            const legendItems = druhyStats.map(druh =>
               `<div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; align-items: center;">
                   <span style="display: inline-block; width: 16px; height: 16px; background: ${druh.color}; border-radius: 50%; margin-right: 8px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></span>
@@ -4077,10 +4081,10 @@ const PaintPro = () => {
             <p>Klikněte na značky pro zobrazení detailů zakázky</p>
           </div>
 
-          <div style={{ 
-            width: '100%', 
-            height: '600px', 
-            borderRadius: '16px', 
+          <div style={{
+            width: '100%',
+            height: '600px',
+            borderRadius: '16px',
             overflow: 'hidden',
             border: '2px solid #e5e7eb',
             position: 'relative'
@@ -4129,12 +4133,12 @@ const PaintPro = () => {
                     zIndex: 1000
                   }}>
                     <div style={{ textAlign: 'center', color: '#6b7280' }}>
-                      <div style={{ 
-                        width: '40px', 
-                        height: '40px', 
-                        border: '4px solid #e5e7eb', 
-                        borderTop: '4px solid #3b82f6', 
-                        borderRadius: '50%', 
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        border: '4px solid #e5e7eb',
+                        borderTop: '4px solid #3b82f6',
+                        borderRadius: '50%',
                         animation: 'spin 1s linear infinite',
                         margin: '0 auto 16px'
                       }}></div>
@@ -4142,10 +4146,10 @@ const PaintPro = () => {
                     </div>
                   </div>
                 )}
-                <div 
-                  ref={mapContainerRef} 
-                  style={{ 
-                    width: '100%', 
+                <div
+                  ref={mapContainerRef}
+                  style={{
+                    width: '100%',
                     height: '100%',
                     opacity: mapInitialized ? 1 : 0,
                     transition: 'opacity 0.3s ease'
@@ -4221,19 +4225,24 @@ const PaintPro = () => {
           </div>
         </div>
 
-        <CalendarComponent 
-          zakazkyData={kalendaroviZakazky}
-          onAddOrder={handleAddZakazka}
-          onEditOrder={handleEditZakazka}
-          onDeleteOrder={handleDeleteZakazka}
-        />
+        <Suspense fallback={<LoadingSpinner />}>
+          <CalendarComponent
+            zakazkyData={kalendaroviZakazky}
+            onAddOrder={handleAddZakazka}
+            onEditOrder={handleEditZakazka}
+            onDeleteOrder={handleDeleteZakazka}
+          />
+        </Suspense>
       </div>
     );
   };
 
-  // Kalkulačka komponenta - použije CalculatorComponent
   const Kalkulacka = () => {
-    return <CalculatorComponent />;
+    return (
+      <Suspense fallback={<LoadingSpinner />}>
+        <CalculatorComponent />
+      </Suspense>
+    );
   };
 
   const renderContent = () => {

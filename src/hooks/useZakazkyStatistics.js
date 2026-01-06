@@ -40,23 +40,23 @@ export const useZakazkyStatistics = (zakazkyData, workCategories) => {
         if (dateParts.length >= 3) {
           const day = parseInt(dateParts[0]) || 1;
           month = parseInt(dateParts[1]) - 1;
-          year = parseInt(dateParts[2]) || 2025;
+          year = parseInt(dateParts[2]) || new Date().getFullYear();
           parsedDate = new Date(year, month, day);
         } else if (dateParts.length === 2) {
           const day = 1;
           month = parseInt(dateParts[0]) - 1;
-          year = parseInt(dateParts[1]) || 2025;
+          year = parseInt(dateParts[1]) || new Date().getFullYear();
           parsedDate = new Date(year, month, day);
         } else {
           month = 0;
-          year = 2025;
+          year = new Date().getFullYear();
           parsedDate = new Date(year, month, 1);
         }
       } else {
         const monthNames = ['Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen', 'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'];
         month = monthNames.indexOf(zakazka.datum);
         if (month === -1) month = 0;
-        year = 2025;
+        year = new Date().getFullYear();
         parsedDate = new Date(year, month, 1);
       }
 
