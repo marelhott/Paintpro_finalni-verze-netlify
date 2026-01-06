@@ -244,35 +244,32 @@ const PaintPro = () => {
     }
   };
   const getMonthlyPerformance = () => {
-    const currentYear = new Date().getFullYear();
     const monthNames = ['Led', 'Úno', 'Bře', 'Dub', 'Kvě', 'Čer', 'Čvc', 'Srp', 'Zář', 'Říj', 'Lis', 'Pro'];
     const monthlyData = {};
 
-    // Inicializace všech měsíců
-    for (let i = 0; i < 12; i++) {
-      const key = `${currentYear}-${String(i + 1).padStart(2, '0')}`;
-      monthlyData[key] = { revenue: 0, orders: 0, month: i, year: currentYear };
-    }
-
-    // Agregace dat ze zakázek - OPRAVENO pro bezpečnost
+    // Agregace dat ze zakázek - pro VŠECHNY roky
     const safeZakazkyData = Array.isArray(zakazkyData) ? zakazkyData : [];
     safeZakazkyData.forEach(zakazka => {
       const date = new Date(zakazka.datum.split('. ').reverse().join('-'));
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const month = date.getMonth();
+      const year = date.getFullYear();
+      const key = `${year}-${String(month + 1).padStart(2, '0')}`;
 
-      if (monthlyData[key]) {
-        monthlyData[key].revenue += zakazka.castka;
-        monthlyData[key].orders += 1;
+      if (!monthlyData[key]) {
+        monthlyData[key] = { revenue: 0, orders: 0, month: month, year: year };
       }
+
+      monthlyData[key].revenue += zakazka.castka;
+      monthlyData[key].orders += 1;
     });
 
     // Získání max hodnot pro procentuální výpočet
-    const maxRevenue = Math.max(...Object.values(monthlyData).map(m => m.revenue));
-    const maxOrders = Math.max(...Object.values(monthlyData).map(m => m.orders));
+    const maxRevenue = Math.max(...Object.values(monthlyData).map(m => m.revenue), 1);
+    const maxOrders = Math.max(...Object.values(monthlyData).map(m => m.orders), 1);
 
-    // Posledních 6 měsíců s daty
+    // Seřazení podle data a vrácení posledních 6 měsíců s daty
     return Object.keys(monthlyData)
-      .filter(key => monthlyData[key].revenue > 0 || monthlyData[key].orders > 0)
+      .sort()
       .slice(-6)
       .map(key => {
         const data = monthlyData[key];
